@@ -1,4 +1,5 @@
 from __future__ import annotations
+import subprocess
 
 import logging
 from dataclasses import dataclass
@@ -55,6 +56,10 @@ class Mode(Enum):
                         logger.info("Collected `%s.`", file)
                     else:
                         logger.info("Ignoring `%s`; it's been masked.", file)
+
+        for name, script in scripts.items():
+            proc = subprocess.run([script], shell=True)
+            logger.info("Running %s returned %d.", name, proc.returncode)
 
         logger.info("Done switching to %s.", self)
 
