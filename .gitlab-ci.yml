@@ -1,0 +1,13 @@
+stages:
+  - publish
+
+pypi:
+  image: python:3.9
+  stage: publish
+  before_script:
+    - pip install twine wheel
+  script:
+    - python setup.py sdist bdist_wheel
+    - twine upload -u __token__ --non-interactive dist/*
+  only:
+    - tags
