@@ -30,3 +30,9 @@ Hint: ``$XDG_DATA_DIRS`` usually matches these, amongst others::
 
 The variety here allows packages to include their own drop-in scripts. The order of
 precedence is also important, so you can mask scripts.
+
+Installation
+------------
+
+- ArchLinux: ``yay install darkman``.
+- Others: ``pip install darkman``.
