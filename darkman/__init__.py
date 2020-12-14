@@ -1,7 +1,7 @@
 from __future__ import annotations
-import subprocess
 
 import logging
+import subprocess
 from dataclasses import dataclass
 from datetime import datetime
 from datetime import timedelta
@@ -238,8 +238,12 @@ class GeoClueClient:
             logger.exception("Internal error!")
 
 
-if __name__ == "__main__":
+def run():
     scheduler = Scheduler()
     geoclient = GeoClueClient()
     reactor.callWhenRunning(geoclient.main, scheduler.set_location)
     reactor.run()
+
+
+if __name__ == "__main__":
+    run()
