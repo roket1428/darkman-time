@@ -154,6 +154,13 @@ class Scheduler:
 
 class GeoClueClient:
     """A client for geoclue2 that waits for the location and runs the callback."""
+    geoclue: RemoteDBusObject
+
+    @defer.inlineCallbacks
+    def _stop_geolocation(self):
+        """Tell geoclue to stop polling for geolocation updates."""
+        yield self.geoclue.callRemote("Stop")
+        logger.info("Geoclue client stopped")
 
     @defer.inlineCallbacks
     def _onLocationUpdated(self, old_path: str, new_path: str):
@@ -162,6 +169,10 @@ class GeoClueClient:
         This function is called after GeoClue confirms our location, and sets timers to
         execute sunrise / sundown actions.
         """
+        # geoclue will keep on updating the location continuously all day.
+        # Don't want that.
+        yield self._stop_geolocation()
+
         location_obj = yield self.connection.getRemoteObject(
             "org.freedesktop.GeoClue2",
             new_path,
