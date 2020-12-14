@@ -70,6 +70,7 @@ class Event:
 
     when: datetime
     mode: Mode
+    scheduler: Scheduler
 
     def schedule(self, scheduler: Scheduler):
         """Schedules this event."""
@@ -82,21 +83,21 @@ class Event:
         logger.info("Will change to %s in %s seconds.", self.mode, wait_for)
         reactor.callLater(wait_for, self.execute, scheduler=scheduler)
 
-    def execute(self, scheduler: GeoClueClient):
+    def execute(self, scheduler: Scheduler):
         """Execute this event, and schedule the next one."""
         self.mode.activate()
         scheduler.mode = self.mode
 
         # XXX: Should I wait here or have some offset? If the clock is skewed a few
         # seconds, this might re-schedule the same event....?
-        next_event = self.gen_next(scheduler.location)
+        next_event = self.gen_next(scheduler)
         next_event.schedule(scheduler=scheduler)
 
     @classmethod
-    def gen_next(cls, location: Observer, date=None) -> Event:
+    def gen_next(cls, scheduler: Scheduler, date=None) -> Event:
         """Return the next event."""
 
-        local_sun = sun(location, date=date, tzinfo=tzlocal())
+        local_sun = sun(scheduler.location, date=date, tzinfo=tzlocal())
 
         light_time = local_sun["dawn"]
         dark_time = local_sun["sunset"] + (local_sun["dusk"] - local_sun["sunset"])
@@ -110,11 +111,11 @@ class Event:
 
         if dark_time < now:
             # Already dark today, next change is tomorrow:
-            return cls.gen_next(location, now + timedelta(days=1))
+            return cls.gen_next(scheduler, now + timedelta(days=1))
         elif light_time < now < dark_time:
-            return Event(dark_time, Mode.Dark)
+            return Event(dark_time, Mode.Dark, scheduler=scheduler)
         elif now < light_time:
-            return Event(light_time, Mode.Light)
+            return Event(light_time, Mode.Light, scheduler=scheduler)
         else:
             raise Exception("Something went wrong. Please report this!")
 
@@ -140,7 +141,7 @@ class Scheduler:
             # We've moved, so those no longer apply.
             call.cancel()
 
-        event = Event.gen_next(self.location)
+        event = Event.gen_next(self)
 
         # Activate the opposite now. E.g.: If the next change is a transition to
         # dark mode, then we should be in light mode now.
