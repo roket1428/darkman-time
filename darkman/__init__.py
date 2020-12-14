@@ -34,7 +34,7 @@ class Mode(Enum):
             return Mode.Dark
         elif mode == Mode.Dark:
             return Mode.Light
-        return ValueError("Expected a Mode.")
+        raise ValueError("Expected a Mode.")
 
     def activate(self):
         """Activate this mode.
@@ -154,6 +154,7 @@ class Scheduler:
 
 class GeoClueClient:
     """A client for geoclue2 that waits for the location and runs the callback."""
+
     geoclue: RemoteDBusObject
 
     @defer.inlineCallbacks
@@ -163,12 +164,14 @@ class GeoClueClient:
         logger.info("Geoclue client stopped")
 
     @defer.inlineCallbacks
-    def _onLocationUpdated(self, old_path: str, new_path: str):
+    def _on_location_updated(self, old_path: str, new_path: str):
         """Work with location data to set timers.
 
         This function is called after GeoClue confirms our location, and sets timers to
         execute sunrise / sundown actions.
         """
+        logger.info("Received location update signal from geoclue")
+
         # geoclue will keep on updating the location continuously all day.
         # Don't want that.
         yield self._stop_geolocation()
@@ -193,7 +196,7 @@ class GeoClueClient:
         self.callback(location)
 
     @defer.inlineCallbacks
-    def _create_geoclue_client(self) -> RemoteDBusObject:
+    def _create_geoclue_object(self) -> RemoteDBusObject:
         """Creates a geoclue client, and returns it.
 
         Clients are private and per-connection. So we need to keep the connection around
@@ -208,40 +211,37 @@ class GeoClueClient:
         client_path = yield manager.callRemote("GetClient")
 
         # Get the client object:
-        client = yield self.connection.getRemoteObject(
+        self.geoclue = yield self.connection.getRemoteObject(
             "org.freedesktop.GeoClue2",
             client_path,
         )
         # This value needs to be set for some form of authorisation.
         # I've no idea what the _right_ value is, but this works fine.
         # Asked upstream at https://gitlab.freedesktop.org/geoclue/geoclue/-/issues/138
-        yield client.callRemote(
+        yield self.geoclue.callRemote(
             "Set",
             "org.freedesktop.GeoClue2.Client",
             "DesktopId",
             "9",
         )
-        return client
 
     @defer.inlineCallbacks
-    def main(self, callback: Callable):
+    def main(self, callback: Callable[[Observer], None]):
         """Listens to location changes."""
         self.callback = callback
 
         try:
-            # Connect to DBus and keep this connection.
-            # We need to re-use the same connection for all calls.
+            # Geoclue expects all calls to be made from the same connection:
             self.connection = yield client.connect(reactor, "system")
 
-            # Get a geoclue client.
-            geoclue_client = yield self._create_geoclue_client()
-            logger.info("Got geoclue client: %s.", geoclue_client)
+            yield self._create_geoclue_object()
+            logger.info("Got geoclue client: %s.", self.geoclue)
 
             # Set a callback for location updates.
-            # This needs to be called _at least_ once.
-            geoclue_client.notifyOnSignal("LocationUpdated", self._onLocationUpdated)
+            self.geoclue.notifyOnSignal("LocationUpdated", self._on_location_updated)
 
-            yield geoclue_client.callRemote("Start")
+            # Find our location using geoclue.
+            yield self.geoclue.callRemote("Start")
             logger.info("Geoclue client started")
 
         except error.DBusException:
