@@ -35,4 +35,16 @@ Installation
 ------------
 
 - ArchLinux: ``yay install darkman``.
-- Others: ``pip install darkman``.
+
+Note: Installing via ``pip`` will not install the systemd service files.
+
+Setup
+-----
+
+You can run the service any way you prefer. The recommended technique is using
+systemd::
+
+    systemctl --user enable --now darkman.service
+
+Note that the dark-mode and light-mode scripts mentioned above are not included in this
+package. You'll need to drop-in scripts you desire.

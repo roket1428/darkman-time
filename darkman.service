@@ -1,0 +1,10 @@
+[Unit]
+Description=Framework for dark-mode and light-mode transitions.
+
+[Service]
+ExecStart=/usr/bin/darkman
+Restart=on-failure
+TimeoutStopSec=300
+
+[Install]
+WantedBy=default.target
