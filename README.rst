@@ -48,3 +48,19 @@ systemd::
 
 Note that the dark-mode and light-mode scripts mentioned above are not included in this
 package. You'll need to drop-in scripts you desire.
+
+Development
+-----------
+
+``darkman`` already works, but is still under development.
+
+For bug and suggestions, see Issues_ on GitLab. Research is also gathered into these
+issues.
+
+.. _Issues: <https://gitlab.com/WhyNotHugo/darkman/-/issues
+
+
+LICENCE
+-------
+
+darkman is licensed under the ISC licence. See LICENCE for details.
