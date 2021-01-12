@@ -57,7 +57,7 @@ Development
 For bug and suggestions, see Issues_ on GitLab. Research is also gathered into these
 issues.
 
-.. _Issues: <https://gitlab.com/WhyNotHugo/darkman/-/issues
+.. _Issues: https://gitlab.com/WhyNotHugo/darkman/-/issues
 
 
 LICENCE
