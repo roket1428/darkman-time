@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import json
 import logging
+import os
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime
@@ -10,6 +12,7 @@ from pathlib import Path
 from typing import Callable
 from typing import Optional
 
+import xdg.BaseDirectory
 from astral import Observer
 from astral.sun import sun
 from dateutil.tz import tzlocal
@@ -124,6 +127,9 @@ class Scheduler:
     _location: Optional[Observer] = None
     mode = Optional[Mode]
 
+    def __init__(self, location: Optional[Observer]):
+        self.set_location(location)
+
     @property
     def location(self):
         return self._location
@@ -191,6 +197,7 @@ class GeoClueClient:
             "Longitude",
         )
         logger.info("Got updated location data: %f, %f", lat, lon)
+        save_location_into_cache(lat=lat, lng=lon)
         location = Observer(latitude=lat, longitude=lon)
 
         self.callback(location)
@@ -250,8 +257,37 @@ class GeoClueClient:
             logger.exception("Internal error!")
 
 
+def save_location_into_cache(lat: float, lng: float) -> None:
+    os.makedirs(
+        os.path.join(xdg.BaseDirectory.xdg_cache_home, "darkman"),
+        exist_ok=True,
+    )
+    cache = os.path.join(xdg.BaseDirectory.xdg_cache_home, "darkman", "location.json")
+    with open(cache, "w") as f:
+        json.dump({"lat": lat, "lng": lng}, f)
+
+
+def get_cached_location() -> Optional[Observer]:
+    cache = os.path.join(xdg.BaseDirectory.xdg_cache_home, "darkman", "location.json")
+    if not os.path.isfile(cache):
+        logger.info("No cached location found.")
+        return None
+
+    with open(cache) as f:
+        cached_data = json.load(f)
+
+    logger.info(
+        "Found cached location data: %f, %f",
+        cached_data["lat"],
+        cached_data["lng"],
+    )
+
+    return Observer(latitude=cached_data["lat"], longitude=cached_data["lng"])
+
+
 def run():
-    scheduler = Scheduler()
+    location = get_cached_location()
+    scheduler = Scheduler(location)
     geoclient = GeoClueClient()
     reactor.callWhenRunning(geoclient.main, scheduler.set_location)
     reactor.run()
