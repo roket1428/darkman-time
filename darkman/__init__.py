@@ -43,15 +43,15 @@ class Mode(Enum):
             return Mode.Light
         raise ValueError("Expected a Mode.")
 
-    def activate(self, scheduler: Scheduler):
+    def activate(self):
         """Activate this mode.
 
         This is done by running one of more scripts in directories defined by
-        convention:
+        convention by looking in ``$XDG_DATA_DIRS/$MODE.d/``.
 
+        Where $MODE is either ``dark-mode`` or ``light-mode``.
         """
         logger.info("Activating %s.", self)
-        scheduler.set_mode(self)
 
         scripts = {}
         for d in BaseDirectory.xdg_data_dirs:
@@ -78,9 +78,9 @@ class Event:
 
     when: datetime
     mode: Mode
-    scheduler: Scheduler
+    controller: Controller
 
-    def schedule(self, scheduler: Scheduler) -> asyncio.Handle:
+    def schedule(self, controller: Controller) -> asyncio.Handle:
         """Schedules this event."""
         now = datetime.now(tzlocal())
 
@@ -91,26 +91,16 @@ class Event:
         logger.info("Will change to %s at %s.", self.mode, self.when)
 
         loop = asyncio.get_event_loop()
-        return loop.call_later(wait_for, self.execute, scheduler)
-
-    def execute(self, scheduler: Scheduler):
-        """Execute this event, and schedule the next one."""
-
-        self.mode.activate(scheduler)
-
-        # XXX: Should I wait here or have some offset? If the clock is skewed a few
-        # seconds, this might re-schedule the same event....?
-        next_event = self.gen_next(scheduler)
-        next_event.schedule(scheduler=scheduler)
+        return loop.call_later(wait_for, controller.activate_mode, self.mode)
 
     @classmethod
-    def gen_next(cls, scheduler: Scheduler, date=None) -> Event:
+    def gen_next(cls, controller: Controller, date=None) -> Event:
         """Return the next event."""
 
-        local_sun = sun(scheduler.location, date=date, tzinfo=tzlocal())
+        local_sun = sun(controller.location, date=date, tzinfo=tzlocal())
 
         light_time = local_sun["dawn"]
-        dark_time = local_sun["sunset"] + (local_sun["dusk"] - local_sun["sunset"])
+        dark_time = local_sun["dusk"] + (local_sun["dusk"] - local_sun["sunset"])
 
         now = datetime.now(tzlocal())
 
@@ -121,52 +111,61 @@ class Event:
 
         if dark_time < now:
             # Already dark today, next change is tomorrow:
-            return cls.gen_next(scheduler, now + timedelta(days=1))
+            return cls.gen_next(controller, now + timedelta(days=1))
         elif light_time < now < dark_time:
-            return Event(dark_time, Mode.Dark, scheduler=scheduler)
+            return Event(dark_time, Mode.Dark, controller=controller)
         elif now < light_time:
-            return Event(light_time, Mode.Light, scheduler=scheduler)
+            return Event(light_time, Mode.Light, controller=controller)
         else:
             raise Exception("Something went wrong. Please report this!")
 
 
-class Scheduler:
+class Controller:
+    """Main controller that understands the current state.
+
+    The controller understands the currently set mode, and handles scheduling
+    of future changes.
+    """
+
     _location: Optional[Observer] = None
-    mode = Optional[Mode]
+    _mode = Optional[Mode]
 
     def __init__(self, location: Optional[Observer]):
         self.set_location(location)
 
     @property
-    def location(self):
+    def location(self) -> Optional[Observer]:
         return self._location
 
-    def set_location(self, location):
+    @property
+    def mode(self) -> Optional[Mode]:
+        return self._mode  # type: ignore
+
+    def set_location(self, location: Observer) -> None:
+        """Set the current location and set timers to update the mode."""
         if location != self._location:
             self._location = location
             self._set_timer()
 
-    def set_mode(self, mode) -> None:
-        self.mode = mode
+    def activate_mode(self, mode: Mode) -> None:
+        """Activates a specific mode, and sets tasks for the next change."""
+
+        self._model = mode
+        mode.activate()
+        self._set_timer()
 
     def _set_timer(self) -> None:
-        """Set timers for the next color scheme transition."""
+        """Schedule the next mode transition."""
 
-        # FIXME: This stopped pending tasks
-        # No we're not stopping them, so schedulers need to be careful
+        event = Event.gen_next(controller=self)
 
-        # for call in reactor.getDelayedCalls():
-        #     # Cancel previously scheduled events.
-        #     # We've moved, so those no longer apply.
-        #     call.cancel()
+        if not self.mode:
+            # This is just for the first timer.
+            # Activate the opposite now. E.g.: If the next change is a
+            # transition to dark mode, then we should be in light mode now.
+            self.activate_mode(event.mode.opposite)
 
-        event = Event.gen_next(self)
-
-        # Activate the opposite now. E.g.: If the next change is a transition to
-        # dark mode, then we should be in light mode now.
-        event.mode.opposite.activate(self)
-
-        event.schedule(scheduler=self)
+        event.schedule(controller=self)
 
     # gsettings set io.elementary.terminal.settings prefer-dark-style true
 
@@ -317,8 +316,8 @@ def run():
     # async tasks can also be cancelled.
 
     location = get_cached_location()
-    scheduler = Scheduler(location)
-    geoclient = GeoClueClient(scheduler.set_location)
+    controller = Controller(location)
+    geoclient = GeoClueClient(controller.set_location)
 
     loop = asyncio.get_event_loop()
     loop.create_task(geoclient.main(), name="Main")
