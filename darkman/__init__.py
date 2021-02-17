@@ -12,6 +12,7 @@ from enum import Enum
 from pathlib import Path
 from typing import Callable
 from typing import Optional
+from typing import Tuple
 
 import xdg.BaseDirectory
 from astral import Observer
@@ -72,54 +73,6 @@ class Mode(Enum):
         logger.info("Done switching to %s.", self)
 
 
-@dataclass
-class Event:
-    """An event in the future in which we'll do a transition."""
-
-    when: datetime
-    mode: Mode
-    controller: Controller
-
-    def schedule(self, controller: Controller) -> asyncio.Handle:
-        """Schedules this event."""
-        now = datetime.now(tzlocal())
-
-        # max here set this to "0". This is to avoid breakage if we're scheduling during
-        # the exact moment that a transition must take place.
-        wait_for = max((self.when - now).total_seconds(), 0)
-
-        logger.info("Will change to %s at %s.", self.mode, self.when)
-
-        loop = asyncio.get_event_loop()
-        return loop.call_later(wait_for, controller.activate_mode, self.mode)
-
-    @classmethod
-    def gen_next(cls, controller: Controller, date=None) -> Event:
-        """Return the next event."""
-
-        local_sun = sun(controller.location, date=date, tzinfo=tzlocal())
-
-        light_time = local_sun["dawn"]
-        dark_time = local_sun["dusk"] + (local_sun["dusk"] - local_sun["sunset"])
-
-        now = datetime.now(tzlocal())
-
-        # XXX: There's an assumption made in this code that sunrise always comes before
-        # sunset. I _think_ this is true anywhere in the world any time of the
-        # year, though have a feeling that this might be one of these silly non-truths
-        # we programmers assume somehow. 🤔
-
-        if dark_time < now:
-            # Already dark today, next change is tomorrow:
-            return cls.gen_next(controller, now + timedelta(days=1))
-        elif light_time < now < dark_time:
-            return Event(dark_time, Mode.Dark, controller=controller)
-        elif now < light_time:
-            return Event(light_time, Mode.Light, controller=controller)
-        else:
-            raise Exception("Something went wrong. Please report this!")
-
-
 class Controller:
     """Main controller that understands the current state.
 
@@ -129,6 +82,7 @@ class Controller:
 
     _location: Optional[Observer] = None
     _mode = Optional[Mode]
+    _next = Optional[asyncio.Handle]
 
     def __init__(self, location: Optional[Observer]):
         self.set_location(location)
@@ -157,15 +111,44 @@ class Controller:
     def _set_timer(self) -> None:
         """Schedule the next mode transition."""
 
-        event = Event.gen_next(controller=self)
+        next_time, next_mode = self.calculate_next_change()
 
-        if not self.mode:
-            # This is just for the first timer.
+        if not self.mode:  # If this is the first run.
             # Activate the opposite now. E.g.: If the next change is a
             # transition to dark mode, then we should be in light mode now.
-            self.activate_mode(event.mode.opposite)
+            self._mode = next_mode.opposite
+            self._mode.activate()
 
-        event.schedule(controller=self)
+        wait_for = (next_time - datetime.now(tzlocal())).total_seconds()
+        logger.info("Will change to %s at %s.", next_mode, next_time)
+
+        loop = asyncio.get_event_loop()
+        self._next = loop.call_later(wait_for, self.activate_mode, next_mode)
+
+    def calculate_next_change(self, date=None) -> Tuple[datetime, Mode]:
+        """Return the next event."""
+
+        local_sun = sun(self.location, date=date, tzinfo=tzlocal())
+
+        light_time = local_sun["dawn"]
+        dark_time = local_sun["dusk"] + (local_sun["dusk"] - local_sun["sunset"])
+
+        now = datetime.now(tzlocal())
+
+        # XXX: There's an assumption made in this code that sunrise always comes before
+        # sunset. I _think_ this is true anywhere in the world any time of the
+        # year, though have a feeling that this might be one of these silly non-truths
+        # we programmers assume somehow. 🤔
+
+        if dark_time < now:
+            # Already dark today, next change is tomorrow:
+            return self.calculate_next_change(now + timedelta(days=1))
+        elif light_time < now < dark_time:
+            return dark_time, Mode.Dark
+        elif now < light_time:
+            return light_time, Mode.Light
+        else:
+            raise Exception("Something went wrong. Please report this!")
 
     # gsettings set io.elementary.terminal.settings prefer-dark-style true
 
