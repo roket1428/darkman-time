@@ -10,7 +10,7 @@ setup(
     license="ISC",
     packages=["darkman"],
     include_package_data=True,
-    entry_points={"console_scripts": ["darkman = darkman:run"]},
+    entry_points={"console_scripts": ["darkman = darkman.cli:run"]},
     install_requires=[
         "astral",
         "python-dateutil",
