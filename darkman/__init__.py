@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import os
@@ -16,11 +17,14 @@ import xdg.BaseDirectory
 from astral import Observer
 from astral.sun import sun
 from dateutil.tz import tzlocal
-from twisted.internet import defer
-from twisted.internet import reactor
-from txdbus import client
-from txdbus import error
-from txdbus.objects import RemoteDBusObject
+from jeepney import DBusAddress
+from jeepney import new_method_call
+from jeepney import Properties
+from jeepney.bus_messages import MatchRule
+from jeepney.bus_messages import message_bus
+from jeepney.io.asyncio import DBusRouter
+from jeepney.io.asyncio import open_dbus_connection
+from jeepney.io.asyncio import Proxy
 from xdg import BaseDirectory
 
 logger = logging.getLogger(__name__)
@@ -39,7 +43,7 @@ class Mode(Enum):
             return Mode.Light
         raise ValueError("Expected a Mode.")
 
-    def activate(self):
+    def activate(self, scheduler: Scheduler):
         """Activate this mode.
 
         This is done by running one of more scripts in directories defined by
@@ -47,6 +51,7 @@ class Mode(Enum):
 
         """
         logger.info("Activating %s.", self)
+        scheduler.set_mode(self)
 
         scripts = {}
         for d in BaseDirectory.xdg_data_dirs:
@@ -75,7 +80,7 @@ class Event:
     mode: Mode
     scheduler: Scheduler
 
-    def schedule(self, scheduler: Scheduler):
+    def schedule(self, scheduler: Scheduler) -> asyncio.Handle:
         """Schedules this event."""
         now = datetime.now(tzlocal())
 
@@ -83,13 +88,15 @@ class Event:
         # the exact moment that a transition must take place.
         wait_for = max((self.when - now).total_seconds(), 0)
 
-        logger.info("Will change to %s in %s seconds.", self.mode, wait_for)
-        reactor.callLater(wait_for, self.execute, scheduler=scheduler)
+        logger.info("Will change to %s at %s.", self.mode, self.when)
+
+        loop = asyncio.get_event_loop()
+        return loop.call_later(wait_for, self.execute, scheduler)
 
     def execute(self, scheduler: Scheduler):
         """Execute this event, and schedule the next one."""
-        self.mode.activate()
-        scheduler.mode = self.mode
+
+        self.mode.activate(scheduler)
 
         # XXX: Should I wait here or have some offset? If the clock is skewed a few
         # seconds, this might re-schedule the same event....?
@@ -139,19 +146,25 @@ class Scheduler:
             self._location = location
             self._set_timer()
 
+    def set_mode(self, mode) -> None:
+        self.mode = mode
+
     def _set_timer(self) -> None:
         """Set timers for the next color scheme transition."""
 
-        for call in reactor.getDelayedCalls():
-            # Cancel previously scheduled events.
-            # We've moved, so those no longer apply.
-            call.cancel()
+        # FIXME: This stopped pending tasks
+        # No we're not stopping them, so schedulers need to be careful
+
+        # for call in reactor.getDelayedCalls():
+        #     # Cancel previously scheduled events.
+        #     # We've moved, so those no longer apply.
+        #     call.cancel()
 
         event = Event.gen_next(self)
 
         # Activate the opposite now. E.g.: If the next change is a transition to
         # dark mode, then we should be in light mode now.
-        event.mode.opposite.activate()
+        event.mode.opposite.activate(self)
 
         event.schedule(scheduler=self)
 
@@ -161,19 +174,20 @@ class Scheduler:
 class GeoClueClient:
     """A client for geoclue2 that waits for the location and runs the callback."""
 
-    geoclue: RemoteDBusObject
+    geoclue: DBusAddress
+    router: DBusRouter
 
     def __init__(self, callback: Callable[[Observer], None]):
         self.callback = callback
 
-    @defer.inlineCallbacks
-    def _stop_geolocation(self):
+    async def _stop_geolocation(self):
         """Tell geoclue to stop polling for geolocation updates."""
-        yield self.geoclue.callRemote("Stop")
+
+        message = new_method_call(self.geoclue, "Stop")
+        await self.router.send(message)
         logger.info("Geoclue client stopped")
 
-    @defer.inlineCallbacks
-    def _on_location_updated(self, old_path: str, new_path: str):
+    async def _on_location_updated(self, old_path: str, new_path: str):
         """Work with location data to set timers.
 
         This function is called after GeoClue confirms our location, and sets timers to
@@ -183,30 +197,26 @@ class GeoClueClient:
 
         # geoclue will keep on updating the location continuously all day.
         # Don't want that.
-        yield self._stop_geolocation()
+        await self._stop_geolocation()
 
-        location_obj = yield self.connection.getRemoteObject(
-            "org.freedesktop.GeoClue2",
-            new_path,
+        location_obj = DBusAddress(
+            object_path=new_path,
+            bus_name="org.freedesktop.GeoClue2",
+            interface="org.freedesktop.GeoClue2.Location",
         )
-        lat = yield location_obj.callRemote(
-            "Get",
-            "org.freedesktop.GeoClue2.Location",
-            "Latitude",
-        )
-        lon = yield location_obj.callRemote(
-            "Get",
-            "org.freedesktop.GeoClue2.Location",
-            "Longitude",
-        )
+        message = Properties(location_obj).get_all()
+        reply = await self.router.send_and_get_reply(message)
+        props = {k: v[1] for k, v in reply.body[0].items()}
+        lat = props["Latitude"]
+        lon = props["Longitude"]
+
         logger.info("Got updated location data: %f, %f", lat, lon)
         save_location_into_cache(lat=lat, lng=lon)
         location = Observer(latitude=lat, longitude=lon)
 
         self.callback(location)
 
-    @defer.inlineCallbacks
-    def _create_geoclue_object(self) -> RemoteDBusObject:
+    async def _create_geoclue_object(self) -> None:
         """Creates a geoclue client, and returns it.
 
         Clients are private and per-connection. So we need to keep the connection around
@@ -214,49 +224,62 @@ class GeoClueClient:
         """
 
         # Ask the manager API to create a client
-        manager = yield self.connection.getRemoteObject(
-            "org.freedesktop.GeoClue2",
-            "/org/freedesktop/GeoClue2/Manager",
+        manager = DBusAddress(
+            object_path="/org/freedesktop/GeoClue2/Manager",
+            bus_name="org.freedesktop.GeoClue2",
+            interface="org.freedesktop.GeoClue2.Manager",
         )
-        client_path = yield manager.callRemote("GetClient")
+        message = new_method_call(manager, "GetClient")
+        reply = await self.router.send_and_get_reply(message)
+        self.client_path = client_path = reply.body[0]
 
-        # Get the client object:
-        self.geoclue = yield self.connection.getRemoteObject(
-            "org.freedesktop.GeoClue2",
-            client_path,
+        logger.info("Geoclue manager returned a client path: %s", client_path)
+
+        self.geoclue = DBusAddress(
+            object_path=client_path,
+            bus_name="org.freedesktop.GeoClue2",
+            interface="org.freedesktop.GeoClue2.Client",
         )
+
         # This value needs to be set for some form of authorisation.
         # I've no idea what the _right_ value is, but this works fine.
         # Asked upstream at https://gitlab.freedesktop.org/geoclue/geoclue/-/issues/138
-        yield self.geoclue.callRemote(
-            "Set",
-            "org.freedesktop.GeoClue2.Client",
-            "DesktopId",
-            "9",
-        )
+        message = Properties(self.geoclue).set("DesktopId", "s", "9")
+        await self.router.send(message)
 
-    @defer.inlineCallbacks
-    def main(self):
+    async def listen(self, ready: asyncio.Event):
+        # Set a callback for location updates.
+        match_rule = MatchRule(
+            type="signal",
+            interface="org.freedesktop.GeoClue2.Client",
+            path=self.client_path,
+        )
+        await Proxy(message_bus, self.router).AddMatch(match_rule)
+
+        with self.router.filter(match_rule) as q:
+            ready.set()
+            msg = await q.get()
+
+            old_path, new_path = msg.body
+            await self._on_location_updated(old_path, new_path)
+
+    async def main(self):
         """Listens to location changes."""
 
-        try:
-            # Geoclue expects all calls to be made from the same connection:
-            self.connection = yield client.connect(reactor, "system")
+        # Geoclue expects all calls to be made from the same connection:
+        conn = await open_dbus_connection(bus="SYSTEM")
+        self.router = DBusRouter(conn)
 
-            yield self._create_geoclue_object()
-            logger.info("Got geoclue client: %s.", self.geoclue)
+        await self._create_geoclue_object()
+        logger.info("Got geoclue client: %s.", self.geoclue)
 
-            # Set a callback for location updates.
-            self.geoclue.notifyOnSignal("LocationUpdated", self._on_location_updated)
+        listener_ready = asyncio.Event()
+        asyncio.create_task(self.listen(listener_ready), name="GeoclueSignalListener")
+        await listener_ready.wait()
 
-            # Find our location using geoclue.
-            yield self.geoclue.callRemote("Start")
-            logger.info("Geoclue client started")
-
-        except error.DBusException:
-            logger.exception("DBus Error!")
-        except Exception:
-            logger.exception("Internal error!")
+        message = new_method_call(self.geoclue, "Start")
+        await self.router.send(message)
+        logger.info("Geoclue client started")
 
 
 def save_location_into_cache(lat: float, lng: float) -> None:
@@ -288,11 +311,22 @@ def get_cached_location() -> Optional[Observer]:
 
 
 def run():
+    # XXX: Maybe connect to system'd login manager and detect when the system suspends
+    # and shit.
+    #
+    # async tasks can also be cancelled.
+
     location = get_cached_location()
     scheduler = Scheduler(location)
     geoclient = GeoClueClient(scheduler.set_location)
-    reactor.callWhenRunning(geoclient.main)
-    reactor.run()
+
+    loop = asyncio.get_event_loop()
+    loop.create_task(geoclient.main(), name="Main")
+
+    try:
+        loop.run_forever()
+    except KeyboardInterrupt:
+        loop.stop()
 
 
 if __name__ == "__main__":
