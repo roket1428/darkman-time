@@ -5,6 +5,7 @@ import json
 import logging
 import os
 import subprocess
+from dataclasses import dataclass
 from datetime import datetime
 from datetime import timedelta
 from enum import Enum
@@ -107,6 +108,12 @@ class Controller:
         self._mode = mode
         self._mode.activate()
 
+    def geoclue_callback(self, result: GeoclueResults) -> None:
+        save_location_into_cache(lat=result.Latitude, lng=result.Longitude)
+
+        location = Observer(latitude=result.Latitude, longitude=result.Longitude)
+        self.set_location(location)
+
     def transition(self) -> None:
         """Transition to the correct mode and queue the next change.
 
@@ -154,16 +161,28 @@ class Controller:
     # gsettings set io.elementary.terminal.settings prefer-dark-style true
 
 
+@dataclass
+class GeoclueResults:
+    Accuracy: float
+    Altitude: float
+    Description: str
+    Heading: float
+    Latitude: float
+    Longitude: float
+    Speed: float
+    Timestamp: Tuple[int, int]
+
+
 class GeoClueClient:
-    """A client for geoclue2 that waits for the location and runs the callback."""
+    """An asyncio client for geoclue2."""
 
     geoclue: DBusAddress
     router: DBusRouter
 
-    def __init__(self, callback: Callable[[Observer], None]):
+    def __init__(self, callback: Callable[[GeoclueResults], None]):
         self.callback = callback
 
-    async def _stop_geolocation(self):
+    async def stop(self):
         """Tell geoclue to stop polling for geolocation updates."""
 
         message = new_method_call(self.geoclue, "Stop")
@@ -179,8 +198,8 @@ class GeoClueClient:
         logger.debug("Geoclue indicates that the location has been found.")
 
         # geoclue will keep on updating the location continuously all day.
-        # Don't want that.
-        await self._stop_geolocation()
+        # That's great for other use cases, but once is fine for us.
+        await self.stop()
 
         location_obj = DBusAddress(
             object_path=new_path,
@@ -189,15 +208,10 @@ class GeoClueClient:
         )
         message = Properties(location_obj).get_all()
         reply = await self.router.send_and_get_reply(message)
-        props = {k: v[1] for k, v in reply.body[0].items()}
-        lat = props["Latitude"]
-        lon = props["Longitude"]
+        result = GeoclueResults(**{k: v[1] for k, v in reply.body[0].items()})
 
-        logger.info("Got updated location data: %f, %f", lat, lon)
-        save_location_into_cache(lat=lat, lng=lon)
-        location = Observer(latitude=lat, longitude=lon)
-
-        self.callback(location)
+        logger.info("Got updated location data: %s.", result)
+        self.callback(result)
 
     async def _create_geoclue_object(self) -> None:
         """Creates a geoclue client, and returns it.
@@ -260,6 +274,10 @@ class GeoClueClient:
         asyncio.create_task(self.listen(listener_ready), name="GeoclueSignalListener")
         await listener_ready.wait()
 
+        await self.start()
+
+    async def start(self):
+        """Start searching for a location."""
         message = new_method_call(self.geoclue, "Start")
         await self.router.send(message)
         logger.info("Geoclue client started")
@@ -294,17 +312,15 @@ def get_cached_location() -> Optional[Observer]:
 
 
 def run():
-    # XXX: Maybe connect to system'd login manager and detect when the system suspends
-    # and shit.
-    #
-    # async tasks can also be cancelled.
+    # XXX: Maybe connect to system'd login manager and detect when the
+    # system suspends and alike.
 
     location = get_cached_location()
     controller = Controller(location)
-    geoclient = GeoClueClient(controller.set_location)
+    geoclue = GeoClueClient(controller.geoclue_callback)
 
     loop = asyncio.get_event_loop()
-    loop.create_task(geoclient.main(), name="Main")
+    loop.create_task(geoclue.main(), name="GeoclueMain")
 
     try:
         loop.run_forever()
