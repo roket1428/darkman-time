@@ -75,7 +75,6 @@ class Controller:
 
     _location: Optional[Observer] = None
     _mode = Optional[Mode]
-    _next = Optional[asyncio.Handle]
 
     def __init__(self, location: Optional[Observer]):
         self.set_location(location)
@@ -94,7 +93,7 @@ class Controller:
             self._location = location
             self.transition()
         else:
-            logger.info("The location is the same as the previous one. Nothing to do")
+            logger.info("The location is the same as the previous one. Nothing to do.")
 
     def set_mode(self, mode: Mode) -> None:
         """Change the current mode and activate it."""
@@ -124,7 +123,7 @@ class Controller:
         logger.info("Will change to %s at %s.", next_mode, next_time)
 
         loop = asyncio.get_event_loop()
-        self._next = loop.call_later(wait_for, self.transition)
+        loop.call_later(wait_for, self.transition)
 
     def calculate_next_change(self, date=None) -> Tuple[datetime, Mode]:
         """Return the next event."""
