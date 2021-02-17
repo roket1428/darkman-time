@@ -163,6 +163,9 @@ class GeoClueClient:
 
     geoclue: RemoteDBusObject
 
+    def __init__(self, callback: Callable[[Observer], None]):
+        self.callback = callback
+
     @defer.inlineCallbacks
     def _stop_geolocation(self):
         """Tell geoclue to stop polling for geolocation updates."""
@@ -233,9 +236,8 @@ class GeoClueClient:
         )
 
     @defer.inlineCallbacks
-    def main(self, callback: Callable[[Observer], None]):
+    def main(self):
         """Listens to location changes."""
-        self.callback = callback
 
         try:
             # Geoclue expects all calls to be made from the same connection:
@@ -288,8 +290,8 @@ def get_cached_location() -> Optional[Observer]:
 def run():
     location = get_cached_location()
     scheduler = Scheduler(location)
-    geoclient = GeoClueClient()
-    reactor.callWhenRunning(geoclient.main, scheduler.set_location)
+    geoclient = GeoClueClient(scheduler.set_location)
+    reactor.callWhenRunning(geoclient.main)
     reactor.run()
 
 
