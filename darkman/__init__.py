@@ -5,7 +5,6 @@ import json
 import logging
 import os
 import subprocess
-from dataclasses import dataclass
 from datetime import datetime
 from datetime import timedelta
 from enum import Enum
@@ -99,31 +98,33 @@ class Controller:
         """Set the current location and set timers to update the mode."""
         if location != self._location:
             self._location = location
-            self._set_timer()
+            self.transition()
+        else:
+            logger.info("The location is the same as the previous one. Nothing to do")
 
-    def activate_mode(self, mode: Mode) -> None:
-        """Activates a specific mode, and sets tasks for the next change."""
+    def set_mode(self, mode: Mode) -> None:
+        """Change the current mode and activate it."""
+        self._mode = mode
+        self._mode.activate()
 
-        self._model = mode
-        mode.activate()
-        self._set_timer()
+    def transition(self) -> None:
+        """Transition to the correct mode and queue the next change.
 
-    def _set_timer(self) -> None:
-        """Schedule the next mode transition."""
+        Calculate the correct mode for right now, and activate it. Also
+        determine the time for the next change, and queue a transition.
+        """
 
         next_time, next_mode = self.calculate_next_change()
 
-        if not self.mode:  # If this is the first run.
-            # Activate the opposite now. E.g.: If the next change is a
-            # transition to dark mode, then we should be in light mode now.
-            self._mode = next_mode.opposite
-            self._mode.activate()
+        # Activate the opposite now. E.g.: If the next change is a
+        # transition to dark mode, then we should be in light mode now.
+        self.set_mode(next_mode.opposite)
 
         wait_for = (next_time - datetime.now(tzlocal())).total_seconds()
         logger.info("Will change to %s at %s.", next_mode, next_time)
 
         loop = asyncio.get_event_loop()
-        self._next = loop.call_later(wait_for, self.activate_mode, next_mode)
+        self._next = loop.call_later(wait_for, self.transition)
 
     def calculate_next_change(self, date=None) -> Tuple[datetime, Mode]:
         """Return the next event."""
@@ -131,7 +132,7 @@ class Controller:
         local_sun = sun(self.location, date=date, tzinfo=tzlocal())
 
         light_time = local_sun["dawn"]
-        dark_time = local_sun["dusk"] + (local_sun["dusk"] - local_sun["sunset"])
+        dark_time = local_sun["sunset"]
 
         now = datetime.now(tzlocal())
 
@@ -167,7 +168,7 @@ class GeoClueClient:
 
         message = new_method_call(self.geoclue, "Stop")
         await self.router.send(message)
-        logger.info("Geoclue client stopped")
+        logger.debug("Geoclue client stopped")
 
     async def _on_location_updated(self, old_path: str, new_path: str):
         """Work with location data to set timers.
@@ -175,7 +176,7 @@ class GeoClueClient:
         This function is called after GeoClue confirms our location, and sets timers to
         execute sunrise / sundown actions.
         """
-        logger.info("Received location update signal from geoclue")
+        logger.debug("Geoclue indicates that the location has been found.")
 
         # geoclue will keep on updating the location continuously all day.
         # Don't want that.
@@ -215,7 +216,7 @@ class GeoClueClient:
         reply = await self.router.send_and_get_reply(message)
         self.client_path = client_path = reply.body[0]
 
-        logger.info("Geoclue manager returned a client path: %s", client_path)
+        logger.debug("Geoclue manager returned a client path: %s", client_path)
 
         self.geoclue = DBusAddress(
             object_path=client_path,
