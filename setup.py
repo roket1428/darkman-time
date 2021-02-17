@@ -15,7 +15,7 @@ setup(
         "astral",
         "python-dateutil",
         "pyxdg",
-        "txdbus",
+        "jeepney",
     ],
     long_description=open("README.rst").read(),
     use_scm_version={
