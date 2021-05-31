@@ -96,7 +96,7 @@ class GeoClueClient:
         # This value needs to be set for some form of authorisation.
         # I've no idea what the _right_ value is, but this works fine.
         # Asked upstream at https://gitlab.freedesktop.org/geoclue/geoclue/-/issues/138
-        message = Properties(self.geoclue).set("DesktopId", "s", "9")
+        message = Properties(self.geoclue).set("DesktopId", "s", "darkman")
         await self.router.send(message)
 
     async def listen(self, ready: asyncio.Event):
