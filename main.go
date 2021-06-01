@@ -162,7 +162,7 @@ func main() {
 	}()
 
 	// Initialise the location services:
-	go CacheLocationService(locations)
+	go LocationService(locations)
 
 	// Sleep silently forever...
 	select {}

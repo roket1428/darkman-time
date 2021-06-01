@@ -1,6 +1,8 @@
 github.com/adrg/xdg v0.3.3 h1:s/tV7MdqQnzB1nKY8aqHvAMD+uCiuEDzVB5HLRY849U=
 github.com/adrg/xdg v0.3.3/go.mod h1:61xAR2VZcggl2St4O9ohF5qCKe08+JDmE4VNzPFQvOQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
+github.com/godbus/dbus/v5 v5.0.4 h1:9349emZab16e7zQvpmsbtjc18ykshndd8y2PG3sgJbA=
+github.com/godbus/dbus/v5 v5.0.4/go.mod h1:xhWf0FNVPg57R7Z0UbKHbJfkEywrmjJnf7w5xrFpKfA=
 github.com/kelvins/sunrisesunset v0.0.0-20210220141756-39fa1bd816d5 h1:ouekCqYkMw4QXFCaLyYqjBe99/MUW4Qf3DJhCRh1G18=
 github.com/kelvins/sunrisesunset v0.0.0-20210220141756-39fa1bd816d5/go.mod h1:3oZ7G+fb8Z8KF+KPHxeDO3GWpEjgvk/f+d/yaxmDRT4=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
