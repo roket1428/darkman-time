@@ -60,7 +60,7 @@ func NextSunriseAndSundown(loc Location) (sunrise time.Time, sundown time.Time, 
 	return
 }
 
-func setTransitionTimer(loc Location) {
+func setNextAlarm(loc Location) {
 	sunrise, sundown, err := NextSunriseAndSundown(loc)
 
 	if err != nil {
@@ -82,8 +82,7 @@ func setTransitionTimer(loc Location) {
 		timeUntilNext = timeUntilLight
 	}
 
-	SetTimer(timeUntilNext)
-	// SetTimer(6 * time.Second) // XXX: REMOVE THIS LINE!
+	SetTimer(timeUntilNext, timers)
 }
 
 func UpdateCurrentMode() {
@@ -119,6 +118,16 @@ func UpdateCurrentMode() {
 	}
 }
 
+// A single tick.
+//
+// Update the mode based on the current time, execute transition, and set the
+// timer for the next tick.
+func Tick() {
+	UpdateCurrentMode()
+	Transition(currentMode)
+	setNextAlarm(*currentLocation)
+}
+
 func main() {
 	log.SetFlags(log.Lshortfile)
 
@@ -126,8 +135,6 @@ func main() {
 	transitions = make(chan Location)
 	timers = make(chan struct{})
 	currentMode = NULL
-
-	go ConnectTimers(timers)
 
 	// Set timer based on locaiton updates:
 	go func() {
@@ -138,9 +145,7 @@ func main() {
 				log.Println("Location has not changed, nothing to do.")
 			} else {
 				currentLocation = &loc
-				UpdateCurrentMode()
-				Transition(currentMode)
-				setTransitionTimer(loc)
+				Tick()
 			}
 		}
 	}()
@@ -148,9 +153,7 @@ func main() {
 	go func() {
 		for {
 			<-timers
-			UpdateCurrentMode()
-			Transition(currentMode)
-			setTransitionTimer(*currentLocation)
+			Tick()
 		}
 	}()
 

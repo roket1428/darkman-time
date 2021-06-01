@@ -17,12 +17,20 @@ import "C"
 
 var (
 	// Due to the nature of these signals, there can only be one listener
-	// for alarm events.
+	// for alarm events. This makes sure that starting the listener is
+	// atomic, so we don't end up with zombie goroutines.
 	alarmSignalLock sync.Mutex
+	c               chan struct{}
+	listenerRunning = false
 )
 
-func ConnectTimers(c chan struct{}) {
+func listenToAlarm(c chan struct{}) {
 	alarmSignalLock.Lock()
+	if listenerRunning {
+		return
+	}
+	listenerRunning = true
+	alarmSignalLock.Unlock()
 
 	c2 := make(chan os.Signal, 1)
 	signal.Notify(c2, syscall.SIGALRM)
@@ -34,7 +42,18 @@ func ConnectTimers(c chan struct{}) {
 	}
 }
 
-func SetTimer(d time.Duration) {
+// Set a timer for a specific duration.
+//
+// The timer will use CLOCK_BOOTTIME. When the system sleeps and wakes up, this
+// clock reflects the period that it was offline, which avoids the timer
+// getting "postponed" due to the system sleeping.
+//
+// Because this uses a POSIX alarm under the hook, there can only be one event
+// listener per timer, so the channel that's past on the last call to this
+// method will receive all future timer expirations.
+func SetTimer(d time.Duration, c chan struct{}) {
+	go listenToAlarm(c)
+
 	var timer C.timer_t
 	C.timer_create(C.CLOCK_BOOTTIME, nil, &timer)
 
