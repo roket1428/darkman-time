@@ -72,17 +72,17 @@ func setNextAlarm(loc Location) {
 	log.Println("Next sunrise:", sunrise)
 	log.Println("Next sundown:", sundown)
 
-	timeUntilDark := sundown.Sub(time.Now().UTC())
-	timeUntilLight := sunrise.Sub(time.Now().UTC())
-
-	var timeUntilNext time.Duration
-	if timeUntilDark < timeUntilLight {
-		timeUntilNext = timeUntilDark
+	var nextTick time.Time
+	if sunrise.Before(sundown) {
+		nextTick = sunrise
 	} else {
-		timeUntilNext = timeUntilLight
+		nextTick = sundown
 	}
 
-	SetTimer(timeUntilNext, timers)
+	now := time.Now().UTC()
+	sleepFor := nextTick.Sub(now)
+
+	SetTimer(sleepFor, timers)
 }
 
 func UpdateCurrentMode() {
