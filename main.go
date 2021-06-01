@@ -104,7 +104,11 @@ func UpdateCurrentMode() {
 		return
 	}
 
-	now := time.Now().UTC()
+	// Add one minute here to compensate for rounding.
+	// When woken up by the clock, it might be a few milliseconds too early
+	// due to rounding. Rather than seek to be more precise (which is
+	// unnecessary), just do what we'd do in a minute.
+	now := time.Now().UTC().Add(time.Minute)
 
 	if now.Before(sunrise) {
 		log.Println("It's before sunrise.")
