@@ -46,6 +46,24 @@ systemd:
 Note that the dark-mode and light-mode scripts mentioned above are not included in this
 package. You'll need to drop-in scripts you desire.
 
+How it works
+------------
+
+When it starts, darkman tries to determine your current location:
+
+- The config file (no yet implemented).
+- The cache file from last time it ran.
+- Using the system [`geoclue`](https://directory.fsf.org/wiki/Geoclue).
+
+Based on your location, it determine sunrise/sundown. It will then update to
+darkmode or light mode accordingly.
+
+Finally, it'll set a timer for the next sundown / sunrise (whichever comes
+first), to switch to the opposite mode, set another timer, and sleep again.
+
+It's designed to run as a service and require as little intervention
+as possible.
+
 Development
 -----------
 
