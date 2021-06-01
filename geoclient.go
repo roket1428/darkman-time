@@ -62,19 +62,6 @@ func (client *Geoclient) listerForLocation(c chan Location) error {
 
 			log.Println("Resolved a new location: ", location)
 			c <- location
-
-			// FIXME: We stop the client here since it otherwise
-			// continues polling on the background (every ~7
-			// minutes). However, we're still missing a mechanism
-			// to re-trigger it at least daily.
-			err = client.StopClient()
-			if err != nil {
-				// Hard-fail here for the same reason we do if
-				// StartClient fails.
-				log.Fatalln("Error stopping client.", err)
-			} else {
-				log.Println("Client stopped.")
-			}
 		}
 	}()
 
@@ -120,12 +107,20 @@ func (client Geoclient) StartClient() error {
 	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
 	err := obj.Call("org.freedesktop.GeoClue2.Client.Start", 0).Err
 
+	if err != nil {
+		log.Println("Client started.")
+	}
+
 	return err
 }
 
 func (client Geoclient) StopClient() error {
 	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
 	err := obj.Call("org.freedesktop.GeoClue2.Client.Stop", 0).Err
+
+	if err != nil {
+		log.Println("Client stopped.")
+	}
 
 	return err
 }

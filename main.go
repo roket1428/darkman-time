@@ -21,6 +21,7 @@ var (
 	timers          chan struct{}
 	currentLocation *Location
 	currentMode     Mode
+	locationService LocationService
 )
 
 func NextSunriseAndSundown(loc Location) (sunrise time.Time, sundown time.Time, err error) {
@@ -144,7 +145,7 @@ func main() {
 	go func() {
 		for {
 			loc := <-locations
-			log.Printf("Got a location update: %v.\n", loc)
+			log.Printf("Now using location %v.\n", loc)
 			if currentLocation != nil && loc == *currentLocation {
 				log.Println("Location has not changed, nothing to do.")
 			} else {
@@ -154,15 +155,19 @@ func main() {
 		}
 	}()
 
+	// Listen for the alarm that wakes us up:
 	go func() {
 		for {
 			<-timers
+			// On wakeup, poll location again.
+			// This'll generally be just twice a day.
+			locationService.Poll()
 			Tick()
 		}
 	}()
 
 	// Initialise the location services:
-	go LocationService(locations)
+	locationService = *StartLocationService(locations)
 
 	// Sleep silently forever...
 	select {}

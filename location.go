@@ -13,6 +13,13 @@ type Location struct {
 	Lng float64 `json:"lng"`
 }
 
+// NOTE: Geoclue continues polling in the background every few minutes, so if
+// we fail to start or stop it, we hard fail and exit. Geoclue will detect that
+// we (the client) has existed, and stop polling.
+//
+// Errors here are hard to handle, since we can't know geoclue's state, and we
+// can't control it and tell it to stop either.
+
 func saveLocationToCache(loc Location) error {
 	cacheFilePath, err := xdg.CacheFile("darkman/location.json")
 	if err != nil {
@@ -30,7 +37,7 @@ func saveLocationToCache(loc Location) error {
 }
 
 // Resolves locations.
-func cacheLocationService(c chan Location) {
+func readLocationFromCache() (location *Location) {
 	cacheFilePath, err := xdg.CacheFile("darkman/location.json")
 	if err != nil {
 		log.Printf("Error determining cache file path: %v\n", err)
@@ -43,61 +50,90 @@ func cacheLocationService(c chan Location) {
 		return
 	}
 
-	var location Location
-	err = json.Unmarshal(data, &location)
+	location = &Location{}
+	err = json.Unmarshal(data, location)
 	if err != nil {
 		log.Printf("Error parsing data from cache file path: %v\n", err)
-		return
+		return nil
 	}
 
-	c <- location
+	return
 }
 
 func manualLocationService(c chan Location) {
 	// TODO: Read from an environment variable.
 }
 
-func geoclueLocationService(c chan Location) {
-	// TODO: Allow disabling geoclue via an env var.
+func initGeoclue(c chan Location) (geoclue *Geoclient, err error) {
+	// Intercept non-cache values here and put them in the cache:
+	proxy := make(chan Location, 10)
 
-	client, err := NewClient("darkman", c)
+	geoclue, err = NewClient("darkman", proxy)
 	if err != nil {
 		log.Println("Fatal error initialising geoclue: ", err)
-		return
+		return 
 	}
 	log.Println("Geoclue initialised.")
 
-	err = client.StartClient()
+	go func() {
+		for {
+
+			loc := <-proxy
+
+			err := saveLocationToCache(loc)
+			if err != nil {
+				log.Println("Error saving location to cache: ", loc)
+			} else {
+				log.Println("Saved location to cache.")
+			}
+
+			c <- loc
+
+			err = geoclue.StopClient()
+			if err != nil {
+				log.Fatalln("Error stopping client.", err)
+			}
+		}
+	}()
+
+	return
+}
+
+type LocationService struct {
+	locations chan Location
+	geoclue   Geoclient
+}
+
+// Update the location once, and go back to sleep.
+func (service LocationService) Poll() {
+	service.geoclue.StartClient()
+}
+
+func StartLocationService(c chan Location) *LocationService {
+	location := readLocationFromCache()
+	if location != nil {
+		log.Println("Read location from cache.")
+		c <- *location
+	}
+
+	// TODO: read from env var in the same manner we read from the cache.
+
+	// TODO: allow disabling geoclue via an env var.
+	geoclue, err := initGeoclue(c)
 	if err != nil {
-		// Exit here on error, since having geoclue in a broken state
-		// can be dangerous: if the service actually DID start, it will
-		// start continuously polling location and we won't be able to
-		// control it.
+		log.Println("Fatal error initialising geoclue: ")
+		return nil
+	}
+
+	service := LocationService{
+		locations: c,
+		geoclue:   *geoclue,
+	}
+
+	err = geoclue.StartClient()
+	if err != nil {
 		log.Fatalln("Fatal error starting geoclue: ", err)
 	}
 
-	log.Println("Geoclue client started.")
-}
-
-func LocationService(c chan Location) {
-	proxyChan := make(chan Location, 10)
-
-	cacheLocationService(c)
-	manualLocationService(proxyChan)
-	geoclueLocationService(proxyChan)
-
-	// Intercept non-cache values here and put them in the cache:
-	for {
-		loc := <-proxyChan
-
-		err := saveLocationToCache(loc)
-		if err != nil {
-			log.Println("Error saving location to cache: ", loc)
-		} else {
-			log.Println("Saved location to cache.")
-		}
-
-		c <- loc
-	}
-
+	return &service
 }
