@@ -141,7 +141,6 @@ func main() {
 				UpdateCurrentMode()
 				Transition(currentMode)
 				setTransitionTimer(loc)
-				// TODO: Also transition to the correct mode.
 			}
 		}
 	}()
