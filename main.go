@@ -1,11 +1,5 @@
 package main
 
-// TODO: actual darkmanservice function
-// returns a chan where new locatios can be fed
-// On location -> determines next transition -> sets timer
-//         Also internally keep record of next transition time
-// On timer -> check time -> transition
-
 import (
 	"log"
 	"time"
