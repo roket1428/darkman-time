@@ -1,5 +1,1 @@
-.eggs
-build
-dist
-darkman.egg-info
-darkman/version.py
+darkman
