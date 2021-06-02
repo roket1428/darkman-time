@@ -11,4 +11,4 @@ install:
 aur:
 	git subtree push -P contrib/aur aur master
 
-.PHONY: build install
+.PHONY: build install aur
