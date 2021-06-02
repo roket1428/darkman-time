@@ -77,6 +77,8 @@ as possible.
 For bug and suggestions, see [Issues][issues] on GitLab. Research is also
 gathered into these issues.
 
+Feel free to join the IRC channel: #whynothugo on irc.libera.chat.
+
 [issues]: https://gitlab.com/WhyNotHugo/darkman/-/issues
 
 
