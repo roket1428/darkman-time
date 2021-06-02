@@ -9,6 +9,6 @@ install:
 	@install -Dm644 darkman.service	${DESTDIR}${PREFIX}/lib/systemd/user/darkman.service
 
 aur:
-	git subtree push -P contrib/aur aur master
+	git subtree push -P contrib/aur ssh://aur@aur.archlinux.org/darkman.git master
 
 .PHONY: build install aur
