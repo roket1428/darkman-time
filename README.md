@@ -30,13 +30,12 @@ Hint: `$XDG_DATA_DIRS` usually matches these, amongst others:
 The variety here allows packages to include their own drop-in scripts. The order of
 precedence is also important, so you can mask scripts.
 
-Installation
-------------
+## Installation
+
 
 - ArchLinux: `yay install darkman`.
 
-Setup
------
+## Setup
 
 You can run the service any way you prefer. The recommended technique is using
 systemd:
@@ -46,8 +45,7 @@ systemd:
 Note that the dark-mode and light-mode scripts mentioned above are not included in this
 package. You'll need to drop-in scripts you desire.
 
-How it works
-------------
+## How it works
 
 When it starts, darkman tries to determine your current location:
 
@@ -64,8 +62,7 @@ first), to switch to the opposite mode, set another timer, and sleep again.
 It's designed to run as a service and require as little intervention
 as possible.
 
-Development
------------
+## Development
 
 `darkman` already works, but is still under development.
 
@@ -75,7 +72,6 @@ gathered into these issues.
 [issues]: https://gitlab.com/WhyNotHugo/darkman/-/issues
 
 
-LICENCE
--------
+## LICENCE
 
 darkman is licensed under the ISC licence. See LICENCE for details.
