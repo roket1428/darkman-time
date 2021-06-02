@@ -18,7 +18,6 @@ const (
 var (
 	locations       chan Location
 	transitions     chan Location
-	timers          chan struct{}
 	currentLocation *Location
 	currentMode     Mode
 	locationService LocationService
@@ -83,7 +82,7 @@ func setNextAlarm(loc Location) {
 	now := time.Now().UTC()
 	sleepFor := nextTick.Sub(now)
 
-	SetTimer(sleepFor, timers)
+	SetTimer(sleepFor)
 }
 
 func UpdateCurrentMode() {
@@ -138,7 +137,6 @@ func main() {
 
 	locations = make(chan Location)
 	transitions = make(chan Location)
-	timers = make(chan struct{})
 	currentMode = NULL
 
 	// Set timer based on locaiton updates:
@@ -161,7 +159,7 @@ func main() {
 	// Listen for the alarm that wakes us up:
 	go func() {
 		for {
-			<-timers
+			<-Alarms
 			// On wakeup, poll location again.
 			// This'll generally be just twice a day.
 			locationService.Poll()
