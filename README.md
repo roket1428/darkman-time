@@ -32,8 +32,16 @@ precedence is also important, so you can mask scripts.
 
 ## Installation
 
+### ArchLinux
 
-- ArchLinux: `yay install darkman`.
+    paru -S darkman
+
+### Others
+
+    git clone git@gitlab.com:WhyNotHugo/darkman.git
+    cd darkman
+    make
+    sudo make install
 
 ## Setup
 
