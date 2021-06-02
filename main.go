@@ -155,6 +155,9 @@ func main() {
 		}
 	}()
 
+	// Initialise the location services:
+	locationService = *StartLocationService(locations)
+
 	// Listen for the alarm that wakes us up:
 	go func() {
 		for {
@@ -165,9 +168,6 @@ func main() {
 			Tick()
 		}
 	}()
-
-	// Initialise the location services:
-	locationService = *StartLocationService(locations)
 
 	// Sleep silently forever...
 	select {}
