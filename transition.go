@@ -51,4 +51,11 @@ func Transition(mode Mode) {
 			log.Printf("Failed to run: %v.\n", err.Error())
 		}
 	}
+
+	if dbusServer == nil {
+		initDbusServer()
+	}
+	if dbusServer != nil {
+		dbusServer.ChangeMode(string(currentMode))
+	}
 }
