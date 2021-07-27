@@ -60,10 +60,6 @@ func readLocationFromCache() (location *Location) {
 	return
 }
 
-func manualLocationService(c chan Location) {
-	// TODO: Read from an environment variable.
-}
-
 func initGeoclue(c chan Location) (geoclue *Geoclient, err error) {
 	// Intercept non-cache values here and put them in the cache:
 	proxy := make(chan Location, 10)
