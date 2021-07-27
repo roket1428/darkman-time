@@ -61,14 +61,24 @@ When it starts, darkman tries to determine your current location:
 - The cache file from last time it ran.
 - Using the system [`geoclue`](https://directory.fsf.org/wiki/Geoclue).
 
-Based on your location, it determine sunrise/sundown. It will then update to
-darkmode or light mode accordingly.
+Based on your location, darkman will determine sunrise/sundown. It will then
+switch to dark mode or light mode accordingly.
 
 Finally, it'll set a timer for the next sundown / sunrise (whichever comes
 first), to switch to the opposite mode, set another timer, and sleep again.
 
 It's designed to run as a service and require as little intervention
 as possible.
+
+### D-Bus service
+
+A D-Bus endpoint is also exposed. There's a property to determine the current
+mode (`Mode`), and a signal to listen to changes (`ModeChanged`). Third-party
+applications can use this to determine whether they should render light mode or
+dark mode.
+
+The object path is `/nl/whynothugo/darkman` and uses the interface
+`nl.whynothugo.darkman`.
 
 ## Development
 
