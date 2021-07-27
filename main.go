@@ -17,7 +17,6 @@ const (
 
 var (
 	locations       chan Location
-	transitions     chan Location
 	currentLocation *Location
 	currentMode     Mode
 	locationService LocationService
@@ -137,7 +136,6 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 
 	locations = make(chan Location)
-	transitions = make(chan Location)
 	currentMode = NULL
 
 	// Set timer based on locaiton updates:
