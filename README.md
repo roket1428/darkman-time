@@ -77,8 +77,8 @@ mode (`Mode`), and a signal to listen to changes (`ModeChanged`). Third-party
 applications can use this to determine whether they should render light mode or
 dark mode.
 
-The object path is `/nl/whynothugo/darkman` and uses the interface
-`nl.whynothugo.darkman`.
+See [dbus-api.xml](dbus-api.xml) for an XML description/introspection of the
+service.
 
 ## Development
 
