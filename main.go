@@ -161,7 +161,10 @@ func main() {
 			<-Alarms
 			// On wakeup, poll location again.
 			// This'll generally be just twice a day.
-			locationService.Poll()
+			err := locationService.Poll()
+			if err != nil {
+				log.Printf("Failed to poll location: %v\n", err)
+			}
 			Tick()
 		}
 	}()

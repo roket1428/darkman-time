@@ -82,11 +82,14 @@ func RunDbusServer(initialMode string) (*ServerHandle, error) {
 		},
 	}
 
-	handle.conn.Export(
+	err = handle.conn.Export(
 		introspect.NewIntrospectable(n),
 		"/nl/whynothugo/darkman",
 		"org.freedesktop.DBus.Introspectable",
 	)
+	if err != nil {
+		return nil, fmt.Errorf("failed to export dbus name: %v", err)
+	}
 
 	reply, err := handle.conn.RequestName("nl.whynothugo.darkman", dbus.NameFlagDoNotQueue)
 	if err != nil {

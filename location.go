@@ -105,8 +105,8 @@ type LocationService struct {
 }
 
 // Update the location once, and go back to sleep.
-func (service LocationService) Poll() {
-	service.geoclue.StartClient()
+func (service LocationService) Poll() error {
+	return service.geoclue.StartClient()
 }
 
 func StartLocationService(c chan Location) *LocationService {

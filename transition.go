@@ -56,6 +56,9 @@ func Transition(mode Mode) {
 		initDbusServer()
 	}
 	if dbusServer != nil {
-		dbusServer.ChangeMode(string(currentMode))
+		err := dbusServer.ChangeMode(string(currentMode))
+		if err !=nil {
+			log.Printf("Failed to change mode on D-Bus: %v.\n", err.Error())
+		}
 	}
 }
