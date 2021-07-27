@@ -81,6 +81,40 @@ Feel free to join the IRC channel: #whynothugo on irc.libera.chat.
 
 [issues]: https://gitlab.com/WhyNotHugo/darkman/-/issues
 
+## History
+
+### v0.1.0
+
+Initial release
+
+### v0.1.1
+
+Include a LICENCE file.
+
+### v0.1.2
+
+Include a systemd service file.
+
+### v0.1.3
+
+Make geoclue stop polling when not needed any more.
+
+### v0.2.0
+
+- Redesign and rewrite.
+- Cache the last known location. This makes subsequent startups faster.
+
+### v0.3.0
+
+Rewrite in golang. This makes building and redistributing a lot simpler, but
+also allows switching to libraries which simplify exposing a D-Bus service.
+
+### v0.4.0
+
+Provide a D-Bus service for other applications to determine the current mode.
+There's both a property (to poll the current mode) and a signal. The signal
+will emit when the current mode changes and allows applications to react
+immediately.
 
 ## LICENCE
 
