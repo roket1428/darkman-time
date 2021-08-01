@@ -141,12 +141,14 @@ func main() {
 		for {
 			loc := <-locations
 			log.Printf("Now using location %v.\n", loc)
+
 			if currentLocation != nil && loc == *currentLocation {
 				log.Println("Location has not changed, nothing to do.")
-			} else {
-				currentLocation = &loc
-				Tick()
-			}
+				continue
+			} 
+
+			currentLocation = &loc
+			Tick()
 		}
 	}()
 
