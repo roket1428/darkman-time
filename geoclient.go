@@ -84,7 +84,7 @@ func NewClient(id string, c chan Location) (*Geoclient, error) {
 	}
 
 	obj = conn.Object("org.freedesktop.GeoClue2", clientPath)
-	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.DesktopId", dbus.MakeVariant("darkman"))
+	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.DesktopId", dbus.MakeVariant(id))
 	if err != nil {
 		return nil, fmt.Errorf("setting DesktopId failed: %v", err)
 	}
