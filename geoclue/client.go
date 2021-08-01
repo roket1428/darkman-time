@@ -1,4 +1,4 @@
-package main
+package geoclue
 
 import (
 	"fmt"
@@ -11,6 +11,11 @@ type Geoclient struct {
 	Locations  chan Location
 	conn       *dbus.Conn
 	clientPath dbus.ObjectPath
+}
+
+type Location struct {
+	Lat float64 `json:"lat"`
+	Lng float64 `json:"lng"`
 }
 
 func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (location Location, err error) {

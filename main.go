@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/kelvins/sunrisesunset"
+
+	"gitlab.com/WhyNotHugo/darkman/geoclue"
 )
 
 type Mode string
@@ -17,14 +19,14 @@ const (
 )
 
 var (
-	locations       chan Location
+	locations       chan geoclue.Location
 	transitions     chan Mode
-	currentLocation *Location
+	currentLocation *geoclue.Location
 	locationService *LocationService
 	dbusServer      *ServerHandle = NewDbusServer()
 )
 
-func NextSunriseAndSundown(loc Location) (sunrise time.Time, sundown time.Time, err error) {
+func NextSunriseAndSundown(loc geoclue.Location) (sunrise time.Time, sundown time.Time, err error) {
 	now := time.Now().UTC()
 	p := sunrisesunset.Parameters{
 		Latitude:  loc.Lat,
@@ -61,7 +63,7 @@ func NextSunriseAndSundown(loc Location) (sunrise time.Time, sundown time.Time, 
 	return
 }
 
-func setNextAlarm(loc Location) {
+func setNextAlarm(loc geoclue.Location) {
 	sunrise, sundown, err := NextSunriseAndSundown(loc)
 
 	if err != nil {
@@ -86,7 +88,7 @@ func setNextAlarm(loc Location) {
 	SetTimer(sleepFor)
 }
 
-func GetCurrentMode(location Location) (Mode, error) {
+func GetCurrentMode(location geoclue.Location) (Mode, error) {
 	p := sunrisesunset.Parameters{
 		Latitude:  location.Lat,
 		Longitude: location.Lng,
@@ -133,7 +135,7 @@ func Tick() {
 func main() {
 	log.SetFlags(log.Lshortfile)
 
-	locations = make(chan Location)
+	locations = make(chan geoclue.Location)
 	transitions = make(chan Mode)
 
 	// Set timer based on location updates:
@@ -145,7 +147,7 @@ func main() {
 			if currentLocation != nil && loc == *currentLocation {
 				log.Println("Location has not changed, nothing to do.")
 				continue
-			} 
+			}
 
 			currentLocation = &loc
 			Tick()

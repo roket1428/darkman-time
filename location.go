@@ -7,12 +7,9 @@ import (
 	"os"
 
 	"github.com/adrg/xdg"
-)
 
-type Location struct {
-	Lat float64 `json:"lat"`
-	Lng float64 `json:"lng"`
-}
+	"gitlab.com/WhyNotHugo/darkman/geoclue"
+)
 
 // NOTE: Geoclue continues polling in the background every few minutes, so if
 // we fail to start or stop it, we hard fail and exit. Geoclue will detect that
@@ -21,7 +18,7 @@ type Location struct {
 // Errors here are hard to handle, since we can't know geoclue's state, and we
 // can't control it and tell it to stop either.
 
-func saveLocationToCache(loc Location) error {
+func saveLocationToCache(loc geoclue.Location) error {
 	cacheFilePath, err := xdg.CacheFile("darkman/location.json")
 	if err != nil {
 		return err
@@ -38,7 +35,7 @@ func saveLocationToCache(loc Location) error {
 }
 
 // Resolves locations.
-func readLocationFromCache() (location *Location) {
+func readLocationFromCache() (location *geoclue.Location) {
 	cacheFilePath, err := xdg.CacheFile("darkman/location.json")
 	if err != nil {
 		log.Printf("Error determining cache file path: %v\n", err)
@@ -51,7 +48,7 @@ func readLocationFromCache() (location *Location) {
 		return
 	}
 
-	location = &Location{}
+	location = &geoclue.Location{}
 	err = json.Unmarshal(data, location)
 	if err != nil {
 		log.Printf("Error parsing data from cache file path: %v\n", err)
@@ -61,8 +58,8 @@ func readLocationFromCache() (location *Location) {
 	return
 }
 
-func initGeoclue(c chan Location) (geoclue *Geoclient, err error) {
-	geoclue, err = NewClient("darkman")
+func initGeoclue(c chan geoclue.Location) (client *geoclue.Geoclient, err error) {
+	client, err = geoclue.NewClient("darkman")
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +67,7 @@ func initGeoclue(c chan Location) (geoclue *Geoclient, err error) {
 
 	go func() {
 		for {
-			loc := <-geoclue.Locations
+			loc := <-client.Locations
 
 			err := saveLocationToCache(loc)
 			if err != nil {
@@ -81,7 +78,7 @@ func initGeoclue(c chan Location) (geoclue *Geoclient, err error) {
 
 			c <- loc
 
-			err = geoclue.StopClient()
+			err = client.StopClient()
 			if err != nil {
 				log.Fatalln("Error stopping client.", err)
 			}
@@ -92,8 +89,8 @@ func initGeoclue(c chan Location) (geoclue *Geoclient, err error) {
 }
 
 type LocationService struct {
-	locations chan Location
-	geoclue   Geoclient
+	locations chan geoclue.Location
+	geoclue   geoclue.Geoclient
 }
 
 // Update the location once, and go back to sleep.
@@ -101,7 +98,7 @@ func (service LocationService) Poll() error {
 	return service.geoclue.StartClient()
 }
 
-func StartLocationService(c chan Location) (*LocationService, error) {
+func StartLocationService(c chan geoclue.Location) (*LocationService, error) {
 	location := readLocationFromCache()
 	if location != nil {
 		log.Println("Read location from cache.")
