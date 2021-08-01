@@ -2,8 +2,8 @@ package geoclue
 
 import (
 	"fmt"
-	"github.com/godbus/dbus/v5"
 	"log"
+	"github.com/godbus/dbus/v5"
 )
 
 type Geoclient struct {
@@ -18,18 +18,19 @@ type Location struct {
 	Lng float64 `json:"lng"`
 }
 
-func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (location Location, err error) {
+func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (location *Location, err error) {
+	location = &Location{}
+
 	obj := client.conn.Object("org.freedesktop.GeoClue2", path)
-	log.Println(path)
 
 	err = obj.StoreProperty("org.freedesktop.GeoClue2.Location.Latitude", &location.Lat)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("error reading Latitutde: %v", err)
 	}
 
 	err = obj.StoreProperty("org.freedesktop.GeoClue2.Location.Longitude", &location.Lng)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("error reading Longitude: %v", err)
 	}
 
 	return
@@ -42,7 +43,7 @@ func (client *Geoclient) listerForLocation(c chan Location) error {
 		// Type: signal...?
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("error listening for signal: %v", err)
 	}
 
 	go func() {
@@ -56,18 +57,18 @@ func (client *Geoclient) listerForLocation(c chan Location) error {
 			// the location data, hence, "newPath".
 			newPath, ok := s.Body[1].(dbus.ObjectPath)
 			if !ok {
-				log.Println("Failed to parse signal location", ok)
+				log.Println("Failed to parse signal location: ", ok)
 				continue
 			}
 
 			location, err := client.getUpdatedLocation(newPath)
 			if err != nil {
-				log.Println("Failed to obtain updated location", err)
+				log.Println("Failed to obtain updated location: ", err)
 				continue
 			}
 
 			log.Println("Resolved a new location: ", location)
-			c <- location
+			c <- *location
 		}
 	}()
 
