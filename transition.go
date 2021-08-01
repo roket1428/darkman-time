@@ -12,6 +12,9 @@ import (
 	"github.com/adrg/xdg"
 )
 
+/// Transition into a new mode.
+///
+/// Fires up all scripts asyncrhonously and returns immediately.
 func Transition(mode Mode) {
 	executables := make(map[string]string)
 	directories := make([]string, len(xdg.DataDirs)+1)
@@ -40,16 +43,18 @@ func Transition(mode Mode) {
 	}
 
 	for _, executable := range executables {
-		log.Printf("Running %v...", executable)
+		go func(executable string) {
+			log.Printf("Running %v...", executable)
 
-		cmd := exec.Command("bash", "-c", executable)
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+			cmd := exec.Command("bash", "-c", executable)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
 
-		err := cmd.Run()
-		if err != nil {
-			log.Printf("Failed to run: %v.\n", err.Error())
-		}
+			err := cmd.Run()
+			if err != nil {
+				log.Printf("Failed to run: %v.\n", err.Error())
+			}
+		}(executable)
 	}
 
 	if dbusServer == nil {
@@ -57,7 +62,7 @@ func Transition(mode Mode) {
 	}
 	if dbusServer != nil {
 		err := dbusServer.ChangeMode(string(currentMode))
-		if err !=nil {
+		if err != nil {
 			log.Printf("Failed to change mode on D-Bus: %v.\n", err.Error())
 		}
 	}
