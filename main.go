@@ -20,7 +20,7 @@ var (
 	currentLocation *Location
 	currentMode     Mode
 	locationService LocationService
-	dbusServer      *ServerHandle
+	dbusServer      *ServerHandle = NewDbusServer()
 )
 
 func NextSunriseAndSundown(loc Location) (sunrise time.Time, sundown time.Time, err error) {

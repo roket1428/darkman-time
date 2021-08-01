@@ -16,6 +16,12 @@ type ServerHandle struct {
 }
 
 func (handle *ServerHandle) ChangeMode(newMode string) error {
+	if handle.conn == nil {
+		if err := handle.start(); err != nil {
+			return err
+		}
+	}
+
 	handle.mode = newMode
 	err := handle.conn.Emit("/nl/whynothugo/darkman", "nl.whynothugo.darkman.ModeChanged", newMode)
 	handle.prop.SetMust("nl.whynothugo.darkman", "Mode", newMode)
@@ -31,19 +37,20 @@ func (handle *ServerHandle) Close() error {
 	return handle.conn.Close()
 }
 
-func RunDbusServer(initialMode string) (*ServerHandle, error) {
-	handle := ServerHandle{mode: initialMode}
+func NewDbusServer() *ServerHandle {
+	return &ServerHandle{}
+}
 
-	var err error
+func (handle *ServerHandle) start() (err error) {
 	handle.conn, err = dbus.ConnectSessionBus()
 	if err != nil {
-		return nil, fmt.Errorf("could not connect to session D-Bus: %v", err)
+		return fmt.Errorf("could not connect to session D-Bus: %v", err)
 	}
 
 	propsSpec := map[string]map[string]*prop.Prop{
 		"nl.whynothugo.darkman": {
 			"Mode": {
-				Value:    initialMode,
+				Value:    handle.mode,
 				Writable: false,
 				Emit:     prop.EmitTrue,
 			},
@@ -51,12 +58,12 @@ func RunDbusServer(initialMode string) (*ServerHandle, error) {
 	}
 	handle.prop, err = prop.Export(handle.conn, "/nl/whynothugo/darkman", propsSpec)
 	if err != nil {
-		return nil, fmt.Errorf("failed to export D-Bus prop: %v", err)
+		return fmt.Errorf("failed to export D-Bus prop: %v", err)
 	}
 
 	err = handle.conn.Export(handle, "/nl/whynothugo/darkman", "nl.whynothugo.darkman")
 	if err != nil {
-		return nil, fmt.Errorf("failed to export interface: %v", err)
+		return fmt.Errorf("failed to export interface: %v", err)
 	}
 
 	signal := introspect.Signal{
@@ -88,26 +95,17 @@ func RunDbusServer(initialMode string) (*ServerHandle, error) {
 		"org.freedesktop.DBus.Introspectable",
 	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to export dbus name: %v", err)
+		return fmt.Errorf("failed to export dbus name: %v", err)
 	}
 
 	reply, err := handle.conn.RequestName("nl.whynothugo.darkman", dbus.NameFlagDoNotQueue)
 	if err != nil {
-		return nil, fmt.Errorf("failed to register dbus name: %v", err)
+		return fmt.Errorf("failed to register dbus name: %v", err)
 	}
 	if reply != dbus.RequestNameReplyPrimaryOwner {
-		return nil, fmt.Errorf("can't register D-Bus name: name already taken")
+		return fmt.Errorf("can't register D-Bus name: name already taken")
 	}
 
-	return &handle, nil
-}
-
-func initDbusServer() {
-	var err error
-	dbusServer, err = RunDbusServer(string(currentMode))
-	if err != nil {
-		log.Printf("Failed to start D-Bus server: %v.\n", err)
-	} else {
-		log.Println("Listening on D-Bus `nl.whynothugo.darkman`...")
-	}
+	log.Println("Listening on D-Bus `nl.whynothugo.darkman`...")
+	return nil
 }
