@@ -62,20 +62,15 @@ func readLocationFromCache() (location *Location) {
 }
 
 func initGeoclue(c chan Location) (geoclue *Geoclient, err error) {
-	// Intercept non-cache values here and put them in the cache:
-	proxy := make(chan Location, 10)
-
-	geoclue, err = NewClient("darkman", proxy)
+	geoclue, err = NewClient("darkman")
 	if err != nil {
-		log.Println("Fatal error initialising geoclue: ", err)
-		return 
+		return nil, err
 	}
 	log.Println("Geoclue initialised.")
 
 	go func() {
 		for {
-
-			loc := <-proxy
+			loc := <-geoclue.Locations
 
 			err := saveLocationToCache(loc)
 			if err != nil {

@@ -8,8 +8,8 @@ import (
 
 type Geoclient struct {
 	Id         string
+	Locations  chan Location
 	conn       *dbus.Conn
-	c          chan Location
 	clientPath dbus.ObjectPath
 }
 
@@ -69,7 +69,7 @@ func (client *Geoclient) listerForLocation(c chan Location) error {
 	return nil
 }
 
-func NewClient(id string, c chan Location) (*Geoclient, error) {
+func NewClient(id string) (*Geoclient, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, err
@@ -91,12 +91,12 @@ func NewClient(id string, c chan Location) (*Geoclient, error) {
 
 	client := &Geoclient{
 		Id:         id,
-		conn:       conn,
-		c:          c,
+		Locations:  make(chan Location, 10),
 		clientPath: clientPath,
+		conn:       conn,
 	}
 
-	err = client.listerForLocation(c)
+	err = client.listerForLocation(client.Locations)
 	if err != nil {
 		return nil, err
 	}
