@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/godbus/dbus/v5"
 	"log"
 )
@@ -68,7 +69,7 @@ func (client *Geoclient) listerForLocation(c chan Location) error {
 	return nil
 }
 
-func NewClient(id string, c chan Location) (client *Geoclient, err error) {
+func NewClient(id string, c chan Location) (*Geoclient, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, err
@@ -79,16 +80,16 @@ func NewClient(id string, c chan Location) (client *Geoclient, err error) {
 	var clientPath dbus.ObjectPath
 	err = obj.Call("org.freedesktop.GeoClue2.Manager.GetClient", 0).Store(&clientPath)
 	if err != nil {
-		return
+		return nil, fmt.Errorf("GetClient failed: %v", err)
 	}
 
 	obj = conn.Object("org.freedesktop.GeoClue2", clientPath)
 	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.DesktopId", dbus.MakeVariant("darkman"))
 	if err != nil {
-		return
+		return nil, fmt.Errorf("setting DesktopId failed: %v", err)
 	}
 
-	client = &Geoclient{
+	client := &Geoclient{
 		Id:         id,
 		conn:       conn,
 		c:          c,
@@ -97,10 +98,10 @@ func NewClient(id string, c chan Location) (client *Geoclient, err error) {
 
 	err = client.listerForLocation(c)
 	if err != nil {
-		return
+		return nil, err
 	}
 
-	return
+	return client, nil
 }
 
 func (client Geoclient) StartClient() error {
