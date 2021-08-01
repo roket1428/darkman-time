@@ -12,10 +12,10 @@ import (
 	"github.com/adrg/xdg"
 )
 
-/// Transition into a new mode.
+/// Run transition scripts for a given mode.
 ///
 /// Fires up all scripts asyncrhonously and returns immediately.
-func Transition(mode Mode) {
+func RunScripts(mode Mode) {
 	executables := make(map[string]string)
 	directories := make([]string, len(xdg.DataDirs)+1)
 
@@ -55,12 +55,5 @@ func Transition(mode Mode) {
 				log.Printf("Failed to run: %v.\n", err.Error())
 			}
 		}(executable)
-	}
-
-	if dbusServer != nil {
-		err := dbusServer.ChangeMode(string(currentMode))
-		if err != nil {
-			log.Printf("Failed to change mode on D-Bus: %v.\n", err.Error())
-		}
 	}
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -17,8 +18,8 @@ const (
 
 var (
 	locations       chan Location
+	transitions     chan Mode
 	currentLocation *Location
-	currentMode     Mode
 	locationService LocationService
 	dbusServer      *ServerHandle = NewDbusServer()
 )
@@ -85,23 +86,16 @@ func setNextAlarm(loc Location) {
 	SetTimer(sleepFor)
 }
 
-func UpdateCurrentMode() {
-	if currentLocation == nil {
-		log.Println("Cannot transition because we don't have a location yet.")
-		// XXX: Maybe this should be fatal? It should really never happen.
-		return
-	}
-
+func GetCurrentMode(location Location) (Mode, error) {
 	p := sunrisesunset.Parameters{
-		Latitude:  currentLocation.Lat,
-		Longitude: currentLocation.Lng,
+		Latitude:  location.Lat,
+		Longitude: location.Lng,
 		UtcOffset: 0,
 		Date:      time.Now().UTC(),
 	}
 	sunrise, sundown, err := p.GetSunriseSunset()
 	if err != nil {
-		log.Printf("An error ocurred trying to calculate sundown/sunrise: %v", err)
-		return
+		return NULL, fmt.Errorf("an error ocurred trying to calculate sundown/sunrise: %v", err)
 	}
 
 	// Add one minute here to compensate for rounding.
@@ -112,13 +106,13 @@ func UpdateCurrentMode() {
 
 	if now.Before(sunrise) {
 		log.Println("It's before sunrise.")
-		currentMode = DARK
+		return DARK, nil
 	} else if now.Before(sundown) {
 		log.Println("It's past sunrise and before sundown.")
-		currentMode = LIGHT
+		return LIGHT, nil
 	} else {
 		log.Println("It's past sundown.")
-		currentMode = DARK
+		return DARK, nil
 	}
 }
 
@@ -127,8 +121,12 @@ func UpdateCurrentMode() {
 // Update the mode based on the current time, execute transition, and set the
 // timer for the next tick.
 func Tick() {
-	UpdateCurrentMode()
-	Transition(currentMode)
+	mode, err := GetCurrentMode(*currentLocation)
+	if err != nil {
+		log.Printf("Error determining current mode transition: %v", err)
+		return
+	}
+	transitions <- mode
 	setNextAlarm(*currentLocation)
 }
 
@@ -136,9 +134,9 @@ func main() {
 	log.SetFlags(log.Lshortfile)
 
 	locations = make(chan Location)
-	currentMode = NULL
+	transitions = make(chan Mode)
 
-	// Set timer based on locaiton updates:
+	// Set timer based on location updates:
 	go func() {
 		for {
 			loc := <-locations
@@ -166,6 +164,19 @@ func main() {
 				log.Printf("Failed to poll location: %v\n", err)
 			}
 			Tick()
+		}
+	}()
+
+	// Do things when we get mode transitions:
+	go func() {
+		previousMode := NULL
+		for {
+			mode := <-transitions
+
+			if mode != previousMode {
+				RunScripts(mode)
+				dbusServer.ChangeMode(string(mode))
+			}
 		}
 	}()
 

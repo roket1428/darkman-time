@@ -15,10 +15,11 @@ type ServerHandle struct {
 	prop *prop.Properties
 }
 
-func (handle *ServerHandle) ChangeMode(newMode string) error {
+func (handle *ServerHandle) ChangeMode(newMode string) {
 	if handle.conn == nil {
 		if err := handle.start(); err != nil {
-			return err
+			log.Printf("Could not start D-Bus server: %v", err)
+			return
 		}
 	}
 
@@ -27,10 +28,8 @@ func (handle *ServerHandle) ChangeMode(newMode string) error {
 	handle.prop.SetMust("nl.whynothugo.darkman", "Mode", newMode)
 
 	if err != nil {
-		return fmt.Errorf("couldn't emit signal: %v", err)
+		log.Printf("couldn't emit signal: %v", err)
 	}
-
-	return nil
 }
 
 func (handle *ServerHandle) Close() error {
