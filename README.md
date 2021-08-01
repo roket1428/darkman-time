@@ -126,6 +126,13 @@ There's both a property (to poll the current mode) and a signal. The signal
 will emit when the current mode changes and allows applications to react
 immediately.
 
+### v0.4.1
+
+- Logging improvements.
+- Don't trigger a transition (or the `ModeChanged` signal) when the mode doesn't
+  need to change.
+- Run all transition scripts in parallel.
+
 ## LICENCE
 
 darkman is licensed under the ISC licence. See LICENCE for details.
