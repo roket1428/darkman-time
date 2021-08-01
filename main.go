@@ -181,10 +181,15 @@ func main() {
 		for {
 			mode := <-transitions
 
-			if mode != previousMode {
-				RunScripts(mode)
-				dbusServer.ChangeMode(string(mode))
+			log.Printf("Mode should now be: %v mode.\n", mode)
+			if mode == previousMode {
+				log.Println("No transition necessary")
+				return
 			}
+
+			RunScripts(mode)
+			dbusServer.ChangeMode(string(mode))
+			previousMode = mode
 		}
 	}()
 
