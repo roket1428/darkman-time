@@ -20,7 +20,7 @@ var (
 	locations       chan Location
 	transitions     chan Mode
 	currentLocation *Location
-	locationService LocationService
+	locationService *LocationService
 	dbusServer      *ServerHandle = NewDbusServer()
 )
 
@@ -153,7 +153,11 @@ func main() {
 	}()
 
 	// Initialise the location services:
-	locationService = *StartLocationService(locations)
+	var err error
+	locationService, err = StartLocationService(locations)
+	if err != nil {
+		log.Printf("Could not start location service: %v.\n", err)
+	}
 
 	// Listen for the alarm that wakes us up:
 	go func() {

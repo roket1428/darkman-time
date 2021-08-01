@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 
@@ -105,7 +106,7 @@ func (service LocationService) Poll() error {
 	return service.geoclue.StartClient()
 }
 
-func StartLocationService(c chan Location) *LocationService {
+func StartLocationService(c chan Location) (*LocationService, error) {
 	location := readLocationFromCache()
 	if location != nil {
 		log.Println("Read location from cache.")
@@ -117,8 +118,7 @@ func StartLocationService(c chan Location) *LocationService {
 	// TODO: allow disabling geoclue via an env var.
 	geoclue, err := initGeoclue(c)
 	if err != nil {
-		log.Println("Fatal error initialising geoclue: ")
-		return nil
+		return nil, fmt.Errorf("error initialising geoclue: %v", err)
 	}
 
 	service := LocationService{
@@ -128,8 +128,9 @@ func StartLocationService(c chan Location) *LocationService {
 
 	err = geoclue.StartClient()
 	if err != nil {
-		log.Fatalln("Fatal error starting geoclue: ", err)
+		return nil, fmt.Errorf("error initialising geoclue: %v", err)
 	}
 
-	return &service
+	return &service, nil
+
 }
