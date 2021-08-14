@@ -67,7 +67,7 @@ func setNextAlarm(loc geoclue.Location) {
 	sunrise, sundown, err := NextSunriseAndSundown(loc)
 
 	if err != nil {
-		log.Printf("An error ocurred trying to calculate sundown/sunrise: %v", err)
+		log.Printf("An error occurred trying to calculate sundown/sunrise: %v", err)
 		return
 	}
 
@@ -97,7 +97,7 @@ func GetCurrentMode(location geoclue.Location) (Mode, error) {
 	}
 	sunrise, sundown, err := p.GetSunriseSunset()
 	if err != nil {
-		return NULL, fmt.Errorf("an error ocurred trying to calculate sundown/sunrise: %v", err)
+		return NULL, fmt.Errorf("an error occurred trying to calculate sundown/sunrise: %v", err)
 	}
 
 	// Add one minute here to compensate for rounding.
