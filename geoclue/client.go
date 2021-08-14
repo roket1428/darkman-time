@@ -2,8 +2,8 @@ package geoclue
 
 import (
 	"fmt"
-	"log"
 	"github.com/godbus/dbus/v5"
+	"log"
 )
 
 type Geoclient struct {

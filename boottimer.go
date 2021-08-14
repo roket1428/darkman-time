@@ -15,7 +15,7 @@ import (
 import "C"
 
 var (
-	Alarms = make (chan struct{})
+	Alarms = make(chan struct{})
 )
 
 // Set a timer for a specific duration.
