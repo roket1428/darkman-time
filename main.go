@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"time"
 
@@ -26,8 +25,7 @@ var (
 	dbusServer      *ServerHandle = NewDbusServer()
 )
 
-func NextSunriseAndSundown(loc geoclue.Location) (sunrise time.Time, sundown time.Time, err error) {
-	now := time.Now().UTC()
+func SunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Time, sundown time.Time, err error) {
 	p := sunrisesunset.Parameters{
 		Latitude:  loc.Lat,
 		Longitude: loc.Lng,
@@ -35,15 +33,19 @@ func NextSunriseAndSundown(loc geoclue.Location) (sunrise time.Time, sundown tim
 		Date:      now,
 	}
 	sunrise, sundown, err = p.GetSunriseSunset()
-	if err != nil {
-		return
-	}
+
+	return
+}
+
+func NextSunriseAndSundown(loc geoclue.Location, now time.Time, curSunrise time.Time, curSundown time.Time) (sunrise time.Time, sundown time.Time, err error) {
+	sunrise = curSunrise
+	sundown = curSundown
 
 	// If sunrise has passed today, the next one is tomorrow:
 	if sunrise.Before(now) {
 		var sundownTomorrow time.Time
 
-		p = sunrisesunset.Parameters{
+		p := sunrisesunset.Parameters{
 			Latitude:  loc.Lat,
 			Longitude: loc.Lng,
 			UtcOffset: 0,
@@ -63,58 +65,38 @@ func NextSunriseAndSundown(loc geoclue.Location) (sunrise time.Time, sundown tim
 	return
 }
 
-func setNextAlarm(loc geoclue.Location) {
-	sunrise, sundown, err := NextSunriseAndSundown(loc)
-
-	if err != nil {
-		log.Printf("An error occurred trying to calculate sundown/sunrise: %v", err)
-		return
-	}
-
-	// If no error has occurred, print the results
+func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.Time) {
 	log.Println("Next sunrise:", sunrise)
 	log.Println("Next sundown:", sundown)
 
 	var nextTick time.Time
-	if sunrise.Before(sundown) {
+	if curMode == DARK {
 		nextTick = sunrise
 	} else {
 		nextTick = sundown
 	}
 
-	now := time.Now().UTC()
 	sleepFor := nextTick.Sub(now)
 
 	SetTimer(sleepFor)
 }
 
-func GetCurrentMode(location geoclue.Location) (Mode, error) {
-	p := sunrisesunset.Parameters{
-		Latitude:  location.Lat,
-		Longitude: location.Lng,
-		UtcOffset: 0,
-		Date:      time.Now().UTC(),
-	}
-	sunrise, sundown, err := p.GetSunriseSunset()
-	if err != nil {
-		return NULL, fmt.Errorf("an error occurred trying to calculate sundown/sunrise: %v", err)
-	}
-
+func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) (Mode) {
 	// Add one minute here to compensate for rounding.
 	// When woken up by the clock, it might be a few milliseconds too early
 	// due to rounding. Rather than seek to be more precise (which is
 	// unnecessary), just do what we'd do in a minute.
-	now := time.Now().UTC().Add(time.Minute)
+	now = now.Add(time.Minute)
 
 	if now.Before(sunrise) {
 		log.Println("It's before sunrise.")
-		return DARK, nil
+		return DARK
 	} else if now.Before(sundown) {
 		log.Println("It's past sunrise and before sundown.")
-		return LIGHT, nil
+		return LIGHT
 	} else {
 		log.Println("It's past sundown.")
-		return DARK, nil
+		return DARK
 	}
 }
 
@@ -123,13 +105,22 @@ func GetCurrentMode(location geoclue.Location) (Mode, error) {
 // Update the mode based on the current time, execute transition, and set the
 // timer for the next tick.
 func Tick() {
-	mode, err := GetCurrentMode(*currentLocation)
+	now := time.Now().UTC()
+	sunrise, sundown, err := SunriseAndSundown(*currentLocation, now)
 	if err != nil {
-		log.Printf("Error determining current mode transition: %v", err)
+		log.Printf("An error occurred trying to calculate sundown/sunrise: %v", err)
 		return
 	}
+
+	mode := GetCurrentMode(now, sunrise, sundown)
 	transitions <- mode
-	setNextAlarm(*currentLocation)
+
+	sunrise, sundown, err = NextSunriseAndSundown(*currentLocation, now, sunrise, sundown)
+	if err != nil {
+		log.Printf("An error occurred trying to calculate next sundown/sunrise: %v", err)
+		return
+	}
+	setNextAlarm(now, mode, sunrise, sundown)
 }
 
 func main() {
