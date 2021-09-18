@@ -114,7 +114,7 @@ func (client Geoclient) StartClient() error {
 	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
 	err := obj.Call("org.freedesktop.GeoClue2.Client.Start", 0).Err
 
-	if err != nil {
+	if err == nil {
 		log.Println("Client started.")
 	}
 
@@ -125,7 +125,7 @@ func (client Geoclient) StopClient() error {
 	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
 	err := obj.Call("org.freedesktop.GeoClue2.Client.Stop", 0).Err
 
-	if err != nil {
+	if err == nil {
 		log.Println("Client stopped.")
 	}
 
