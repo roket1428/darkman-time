@@ -184,7 +184,7 @@ func main() {
 			log.Printf("Mode should now be: %v mode.\n", mode)
 			if mode == previousMode {
 				log.Println("No transition necessary")
-				return
+				continue
 			}
 
 			RunScripts(mode)
