@@ -51,7 +51,10 @@ func (client *Geoclient) listerForLocation(c chan Location) error {
 		client.conn.Signal(c2)
 		for {
 			s := <-c2
-			// Name should always be org.freedesktop.GeoClue2.Client.LocationUpdated
+			if s.Name != "org.freedesktop.GeoClue2.Client.LocationUpdated" {
+				log.Println("Got an unrelated event? ", s)
+				continue
+			}
 
 			// Geoclue gives us the path to a new object that has
 			// the location data, hence, "newPath".
