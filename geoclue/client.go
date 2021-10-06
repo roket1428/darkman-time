@@ -36,7 +36,7 @@ func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (location *Loc
 	return
 }
 
-func (client *Geoclient) listerForLocation(c chan Location) error {
+func (client *Geoclient) listerForLocation() error {
 	err := client.conn.AddMatchSignal(
 		dbus.WithMatchObjectPath(client.clientPath),
 		dbus.WithMatchInterface("org.freedesktop.GeoClue2.Client"),
@@ -71,7 +71,7 @@ func (client *Geoclient) listerForLocation(c chan Location) error {
 			}
 
 			log.Println("Resolved a new location: ", location)
-			c <- *location
+			client.Locations <- *location
 		}
 	}()
 
@@ -105,7 +105,7 @@ func NewClient(id string) (*Geoclient, error) {
 		conn:       conn,
 	}
 
-	err = client.listerForLocation(client.Locations)
+	err = client.listerForLocation()
 	if err != nil {
 		return nil, err
 	}
