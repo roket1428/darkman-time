@@ -101,7 +101,7 @@ func (service LocationService) Poll() error {
 func StartLocationService(c chan geoclue.Location) (*LocationService, error) {
 	location := readLocationFromCache()
 	if location != nil {
-		log.Println("Read location from cache.")
+		log.Println("Read location from cache:", location)
 		c <- *location
 	}
 
