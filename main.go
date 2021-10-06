@@ -18,6 +18,7 @@ const (
 )
 
 var (
+	config          *Config
 	locations       chan geoclue.Location
 	transitions     chan Mode
 	currentLocation *geoclue.Location
@@ -123,11 +124,27 @@ func Tick() {
 	setNextAlarm(now, mode, sunrise, sundown)
 }
 
-func main() {
+func init() {
 	log.SetFlags(log.Lshortfile)
 
+	var err error
+	config, err = ReadConfig()
+	if err != nil {
+		log.Println("Could not read configuration file:", err)
+	}
+}
+
+func main() {
 	locations = make(chan geoclue.Location)
 	transitions = make(chan Mode)
+
+	initialLocation, err := config.GetLocation()
+	if err != nil {
+		log.Println("No location found via config.")
+	} else {
+		log.Println("Found location in config:", initialLocation)
+		currentLocation = initialLocation
+	}
 
 	// Set timer based on location updates:
 	go func() {
@@ -146,7 +163,6 @@ func main() {
 	}()
 
 	// Initialise the location services:
-	var err error
 	locationService, err = StartLocationService(locations)
 	if err != nil {
 		log.Printf("Could not start location service: %v.\n", err)
