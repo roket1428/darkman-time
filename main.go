@@ -21,7 +21,6 @@ var (
 	config          *Config
 	locations       chan geoclue.Location
 	transitions     chan Mode
-	currentLocation *geoclue.Location
 	locationService *LocationService
 	dbusServer      *ServerHandle = NewDbusServer()
 )
@@ -105,9 +104,9 @@ func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) (Mode) 
 //
 // Update the mode based on the current time, execute transition, and set the
 // timer for the next tick.
-func Tick() {
+func Tick(currentLocation geoclue.Location) {
 	now := time.Now().UTC()
-	sunrise, sundown, err := SunriseAndSundown(*currentLocation, now)
+	sunrise, sundown, err := SunriseAndSundown(currentLocation, now)
 	if err != nil {
 		log.Printf("An error occurred trying to calculate sundown/sunrise: %v", err)
 		return
@@ -116,7 +115,7 @@ func Tick() {
 	mode := GetCurrentMode(now, sunrise, sundown)
 	transitions <- mode
 
-	sunrise, sundown, err = NextSunriseAndSundown(*currentLocation, now, sunrise, sundown)
+	sunrise, sundown, err = NextSunriseAndSundown(currentLocation, now, sunrise, sundown)
 	if err != nil {
 		log.Printf("An error occurred trying to calculate next sundown/sunrise: %v", err)
 		return
@@ -135,6 +134,7 @@ func init() {
 }
 
 func main() {
+	var currentLocation *geoclue.Location
 	locations = make(chan geoclue.Location)
 	transitions = make(chan Mode)
 
@@ -149,16 +149,16 @@ func main() {
 	// Set timer based on location updates:
 	go func() {
 		for {
-			loc := <-locations
-			log.Printf("Now using location %v.\n", loc)
+			newLocation := <-locations
+			log.Printf("Now using location %v.\n", newLocation)
 
-			if currentLocation != nil && loc == *currentLocation {
+			if currentLocation != nil && newLocation == *currentLocation {
 				log.Println("Location has not changed, nothing to do.")
 				continue
 			}
 
-			currentLocation = &loc
-			Tick()
+			currentLocation = &newLocation
+			Tick(*currentLocation)
 		}
 	}()
 
@@ -180,7 +180,7 @@ func main() {
 					log.Printf("Failed to poll location: %v\n", err)
 				}
 			}
-			Tick()
+			Tick(*currentLocation)
 		}
 	}()
 
