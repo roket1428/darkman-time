@@ -139,11 +139,10 @@ func main() {
 		log.Println("No location found via config.")
 	} else {
 		log.Println("Found location in config:", initialLocation)
-		currentLocation = initialLocation
 	}
 
 	// Initialise the location services:
-	locationService, err := NewLocationService()
+	locationService, err := NewLocationService(initialLocation)
 	if err != nil {
 		log.Printf("Could not create location service: %v.\n", err)
 	}

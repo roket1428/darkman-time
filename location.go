@@ -98,17 +98,20 @@ func (service LocationService) Poll() error {
 	return service.geoclue.StartClient()
 }
 
-func NewLocationService() (*LocationService, error) {
+func NewLocationService(initial *geoclue.Location) (*LocationService, error) {
 	c := make(chan geoclue.Location, 1)
-	location := readLocationFromCache()
-	if location != nil {
-		log.Println("Read location from cache:", location)
-		c <- *location
+
+	if initial == nil {
+		initial := readLocationFromCache()
+		if initial != nil {
+			log.Println("Read location from cache:", initial)
+		}
 	}
 
-	// TODO: read from env var in the same manner we read from the cache.
+	if initial != nil {
+		c <- *initial
+	}
 
-	// TODO: allow disabling geoclue via an env var.
 	geoclue, err := initGeoclue(c)
 	if err != nil {
 		return nil, fmt.Errorf("error initialising geoclue: %v", err)
