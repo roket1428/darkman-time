@@ -131,7 +131,6 @@ func init() {
 
 func main() {
 	var currentLocation *geoclue.Location
-	locations := make(chan geoclue.Location)
 	transitions := make(chan Mode)
 	dbusServer := NewDbusServer()
 
@@ -143,10 +142,16 @@ func main() {
 		currentLocation = initialLocation
 	}
 
+	// Initialise the location services:
+	locationService, err := NewLocationService()
+	if err != nil {
+		log.Printf("Could not create location service: %v.\n", err)
+	}
+
 	// Set timer based on location updates:
 	go func() {
 		for {
-			newLocation := <-locations
+			newLocation := <-locationService.C
 			log.Printf("Now using location %v.\n", newLocation)
 
 			if currentLocation != nil && newLocation == *currentLocation {
@@ -159,10 +164,9 @@ func main() {
 		}
 	}()
 
-	// Initialise the location services:
-	locationService, err := StartLocationService(locations)
+	err = locationService.Poll()
 	if err != nil {
-		log.Printf("Could not start location service: %v.\n", err)
+		log.Println("Could not start location service:", err)
 	}
 
 	// Listen for the alarm that wakes us up:

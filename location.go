@@ -89,8 +89,8 @@ func initGeoclue(c chan geoclue.Location) (client *geoclue.Geoclient, err error)
 }
 
 type LocationService struct {
-	locations chan geoclue.Location
-	geoclue   geoclue.Geoclient
+	C       chan geoclue.Location
+	geoclue geoclue.Geoclient
 }
 
 // Update the location once, and go back to sleep.
@@ -98,7 +98,8 @@ func (service LocationService) Poll() error {
 	return service.geoclue.StartClient()
 }
 
-func StartLocationService(c chan geoclue.Location) (*LocationService, error) {
+func NewLocationService() (*LocationService, error) {
+	c := make(chan geoclue.Location, 1)
 	location := readLocationFromCache()
 	if location != nil {
 		log.Println("Read location from cache:", location)
@@ -114,13 +115,8 @@ func StartLocationService(c chan geoclue.Location) (*LocationService, error) {
 	}
 
 	service := LocationService{
-		locations: c,
-		geoclue:   *geoclue,
-	}
-
-	err = geoclue.StartClient()
-	if err != nil {
-		return nil, fmt.Errorf("error initialising geoclue: %v", err)
+		C:       c,
+		geoclue: *geoclue,
 	}
 
 	return &service, nil
