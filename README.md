@@ -9,9 +9,6 @@ A framework for dark-mode and light-mode transitions on Linux desktop.
 again at sunrise. `darkman` is not designed to be used interactively: it's designed to
 be set up once, and run in the background.
 
-`darkman` will use `geoclue` to determine your location and calculate sundown and
-sunrise automatically.
-
 At sundown, it will look for scripts in `$XDG_DATA_DIRS/dark-mode.d/`.
 At sunrise, it will look for scripts in `$XDG_DATA_DIRS/light-mode.d/`.
 
@@ -19,7 +16,8 @@ These scripts individually configure different components and applications. Give
 lack of normalised "dark-mode" APIs on Linux desktop, it's likely that scripts for
 different applications and toolkits have to be dumped in.
 
-This project seeks to be a source for such scripts too.
+Sample and reference scripts are included in this repository, and further
+contributions for specific tools or environments are welcome.
 
 Hint: `$XDG_DATA_DIRS` usually matches these, amongst others:
 
@@ -45,13 +43,13 @@ precedence is also important, so you can mask scripts.
 
 ## Setup
 
-You can run the service any way you prefer. The recommended technique is using
-systemd:
+You can run the service any way you prefer. If you use systemd, a service file
+is included:
 
     systemctl --user enable --now darkman.service
 
-Note that the dark-mode and light-mode scripts mentioned above are not included in this
-package. You'll need to drop-in scripts you desire.
+Note that the dark-mode and light-mode scripts mentioned above are not included
+in this package. You'll need to drop-in the scripts you desire.
 
 ## How it works
 
@@ -72,28 +70,7 @@ as possible.
 
 ## Configuration
 
-`darkman` requires no configuration, but you may, optionally, provide your
-geolocation (this is also useful if you don't want to or can't run geoclue).
-
-Configuration is read from `~/.config/darkman/config.yaml`, and takes the
-format of:
-
-```yaml
-lat: 52.3
-lng: 4.8
-```
-
-You may also use environment variables to set a location:
-
-```
-DARKMAN_LAT=52.3
-DARKMAN_LNG=4.8
-```
-
-Environment variables take precedence over the configuration file.
-
-You generally don't need more than one decimal point for your location. See
-[this article](https://xkcd.com/2170/) for details.
+See [the man page](darkman.1.scd) (`man darkman`) for configuration details.
 
 ### D-Bus service
 
@@ -109,8 +86,8 @@ service.
 
 `darkman` already works, but is still under development.
 
-For bug and suggestions, see [Issues][issues] on GitLab. Research is also
-gathered into these issues.
+For bug and suggestions, see [Issues][issues] on GitLab. Ongoing research is
+also gathered into these issues.
 
 Feel free to join the IRC channel: #whynothugo on irc.libera.chat.
 

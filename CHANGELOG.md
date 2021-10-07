@@ -48,3 +48,7 @@ immediately.
 - `boottimer` has been moved into a separate module. It is considered usable by
   third parties, though its design is likely non-final, and it still needs
   finer testing outside our specific use-case.
+
+## v0.5.1
+
+- A man page is not included.
