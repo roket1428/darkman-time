@@ -6,6 +6,7 @@ import (
 
 	"github.com/kelvins/sunrisesunset"
 
+	"gitlab.com/WhyNotHugo/darkman/boottimer"
 	"gitlab.com/WhyNotHugo/darkman/geoclue"
 )
 
@@ -74,7 +75,7 @@ func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.T
 
 	sleepFor := nextTick.Sub(now)
 
-	SetTimer(sleepFor)
+	boottimer.SetTimer(sleepFor)
 }
 
 func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) Mode {
@@ -130,7 +131,7 @@ func main() {
 	// Alarms wake us up when it's time for the next transition.
 	go func() {
 		for {
-			<-Alarms
+			<-boottimer.Alarms
 			// On wakeup, poll location again.
 			// This'll generally be just twice a day.
 			err = locationService.Poll()
