@@ -115,7 +115,7 @@ func NewLocationService(initial *geoclue.Location) LocationService {
 	}
 
 	if initial == nil {
-		initial := readLocationFromCache()
+		initial = readLocationFromCache()
 		if initial != nil {
 			log.Println("Read location from cache:", initial)
 		}
