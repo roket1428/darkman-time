@@ -70,6 +70,31 @@ first), to switch to the opposite mode, set another timer, and sleep again.
 It's designed to run as a service and require as little intervention
 as possible.
 
+## Configuration
+
+`darkman` requires no configuration, but you may, optionally, provide your
+geolocation (this is also useful if you don't want to or can't run geoclue).
+
+Configuration is read from `~/.config/darkman/config.yaml`, and takes the
+format of:
+
+```yaml
+lat: 52.3
+lng: 4.8
+```
+
+You may also use environment variables to set a location:
+
+```
+DARKMAN_LAT=52.3
+DARKMAN_LNG=4.8
+```
+
+Environment variables take precedence over the configuration file.
+
+You generally don't need more than one decimal point for your location. See
+[this article](https://xkcd.com/2170/) for details.
+
 ### D-Bus service
 
 A D-Bus endpoint is also exposed. There's a property to determine the current
