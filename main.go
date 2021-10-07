@@ -96,53 +96,6 @@ func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) Mode {
 	}
 }
 
-// A single tick.
-//
-// Update the mode based on the current time, execute transition, and set the
-// timer for the next tick.
-func Tick(currentLocation geoclue.Location, transitions chan Mode) {
-	now := time.Now().UTC()
-	sunrise, sundown, err := SunriseAndSundown(currentLocation, now)
-	if err != nil {
-		log.Printf("An error occurred trying to calculate sundown/sunrise: %v", err)
-		return
-	}
-
-	mode := GetCurrentMode(now, sunrise, sundown)
-	transitions <- mode
-
-	sunrise, sundown, err = NextSunriseAndSundown(currentLocation, now, sunrise, sundown)
-	if err != nil {
-		log.Printf("An error occurred trying to calculate next sundown/sunrise: %v", err)
-		return
-	}
-	setNextAlarm(now, mode, sunrise, sundown)
-}
-
-/// Waits for transitions to happen and executes necessary actions.
-func waitForTransitions(dbusServer ServerHandle) chan Mode {
-	c := make(chan Mode)
-
-	go func() {
-		previousMode := NULL
-		for {
-			mode := <-c
-
-			log.Printf("Mode should now be: %v mode.\n", mode)
-			if mode == previousMode {
-				log.Println("No transition necessary")
-				continue
-			}
-
-			RunScripts(mode)
-			dbusServer.ChangeMode(string(mode))
-			previousMode = mode
-		}
-	}()
-
-	return c
-}
-
 func init() {
 	log.SetFlags(log.Lshortfile)
 
@@ -154,10 +107,6 @@ func init() {
 }
 
 func main() {
-	var currentLocation *geoclue.Location
-	dbusServer := NewDbusServer()
-	transitions := waitForTransitions(dbusServer)
-
 	initialLocation, err := config.GetLocation()
 	if err != nil {
 		log.Println("No location found via config.")
@@ -165,31 +114,20 @@ func main() {
 		log.Println("Found location in config:", initialLocation)
 	}
 
-	// Initialise the location services:
+	dbusServer := NewDbusServer()
+	transitionHandler := NewTransitionHandler(dbusServer)
 	locationService := NewLocationService(initialLocation)
 
-	// Set timer based on location updates:
+	// Listen for location changes and pass them to the handler.
 	go func() {
 		for {
 			newLocation := <-locationService.C
-			log.Printf("Now using location %v.\n", newLocation)
-
-			if currentLocation != nil && newLocation == *currentLocation {
-				log.Println("Location has not changed, nothing to do.")
-				continue
-			}
-
-			currentLocation = &newLocation
-			Tick(*currentLocation, transitions)
+			log.Println("Location service has yielded:", newLocation)
+			transitionHandler.UpdateLocation(newLocation)
 		}
 	}()
 
-	err = locationService.Poll()
-	if err != nil {
-		log.Println("Could not start location service:", err)
-	}
-
-	// Listen for the alarm that wakes us up:
+	// Alarms wake us up when it's time for the next transition.
 	go func() {
 		for {
 			<-Alarms
@@ -200,9 +138,14 @@ func main() {
 				log.Printf("Failed to poll location: %v\n", err)
 			}
 
-			Tick(*currentLocation, transitions)
+			transitionHandler.Tick()
 		}
 	}()
+
+	err = locationService.Poll()
+	if err != nil {
+		log.Println("Could not start location service:", err)
+	}
 
 	// Sleep silently forever...
 	select {}
