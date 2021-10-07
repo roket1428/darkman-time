@@ -158,6 +158,14 @@ immediately.
   need to change.
 - Run all transition scripts in parallel.
 
+### v0.5.0
+
+- darkman is now configurable via a configuration file, or environment
+  variables. See README.md for details.
+- `boottimer` has been moved into a separate module. It is considered usable by
+  third parties, though its design is likely non-final, and it still needs
+  finer testing outside our specific use-case.
+
 ## LICENCE
 
 darkman is licensed under the ISC licence. See LICENCE for details.
