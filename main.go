@@ -166,10 +166,7 @@ func main() {
 	}
 
 	// Initialise the location services:
-	locationService, err := NewLocationService(initialLocation)
-	if err != nil {
-		log.Printf("Could not create location service: %v.\n", err)
-	}
+	locationService := NewLocationService(initialLocation)
 
 	// Set timer based on location updates:
 	go func() {
@@ -198,12 +195,11 @@ func main() {
 			<-Alarms
 			// On wakeup, poll location again.
 			// This'll generally be just twice a day.
-			if locationService != nil {
-				err = locationService.Poll()
-				if err != nil {
-					log.Printf("Failed to poll location: %v\n", err)
-				}
+			err = locationService.Poll()
+			if err != nil {
+				log.Printf("Failed to poll location: %v\n", err)
 			}
+
 			Tick(*currentLocation, transitions)
 		}
 	}()
