@@ -119,6 +119,30 @@ func Tick(currentLocation geoclue.Location, transitions chan Mode) {
 	setNextAlarm(now, mode, sunrise, sundown)
 }
 
+/// Waits for transitions to happen and executes necessary actions.
+func waitForTransitions(dbusServer ServerHandle) chan Mode {
+	c := make(chan Mode)
+
+	go func() {
+		previousMode := NULL
+		for {
+			mode := <-c
+
+			log.Printf("Mode should now be: %v mode.\n", mode)
+			if mode == previousMode {
+				log.Println("No transition necessary")
+				continue
+			}
+
+			RunScripts(mode)
+			dbusServer.ChangeMode(string(mode))
+			previousMode = mode
+		}
+	}()
+
+	return c
+}
+
 func init() {
 	log.SetFlags(log.Lshortfile)
 
@@ -131,8 +155,8 @@ func init() {
 
 func main() {
 	var currentLocation *geoclue.Location
-	transitions := make(chan Mode)
 	dbusServer := NewDbusServer()
+	transitions := waitForTransitions(dbusServer)
 
 	initialLocation, err := config.GetLocation()
 	if err != nil {
@@ -181,24 +205,6 @@ func main() {
 				}
 			}
 			Tick(*currentLocation, transitions)
-		}
-	}()
-
-	// Do things when we get mode transitions:
-	go func() {
-		previousMode := NULL
-		for {
-			mode := <-transitions
-
-			log.Printf("Mode should now be: %v mode.\n", mode)
-			if mode == previousMode {
-				log.Println("No transition necessary")
-				continue
-			}
-
-			RunScripts(mode)
-			dbusServer.ChangeMode(string(mode))
-			previousMode = mode
 		}
 	}()
 

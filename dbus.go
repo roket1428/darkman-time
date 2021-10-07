@@ -36,8 +36,8 @@ func (handle *ServerHandle) Close() error {
 	return handle.conn.Close()
 }
 
-func NewDbusServer() *ServerHandle {
-	return &ServerHandle{}
+func NewDbusServer() ServerHandle {
+	return ServerHandle{}
 }
 
 func (handle *ServerHandle) start() (err error) {
