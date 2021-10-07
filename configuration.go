@@ -35,6 +35,10 @@ func ReadConfig() (*Config, error) {
 		log.Println("Could not read configuration file, ", err)
 	}
 
+	// Load env vars (e.g.: DARKMAN_LAT) too.
+	viper.SetEnvPrefix("darkman")
+	viper.AutomaticEnv()
+
 	config := &Config{}
 	err = viper.Unmarshal(config)
 	if err != nil {
