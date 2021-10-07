@@ -18,11 +18,7 @@ const (
 )
 
 var (
-	config          *Config
-	locations       chan geoclue.Location
-	transitions     chan Mode
-	locationService *LocationService
-	dbusServer      *ServerHandle = NewDbusServer()
+	config *Config
 )
 
 func SunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Time, sundown time.Time, err error) {
@@ -81,7 +77,7 @@ func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.T
 	SetTimer(sleepFor)
 }
 
-func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) (Mode) {
+func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) Mode {
 	// Add one minute here to compensate for rounding.
 	// When woken up by the clock, it might be a few milliseconds too early
 	// due to rounding. Rather than seek to be more precise (which is
@@ -104,7 +100,7 @@ func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) (Mode) 
 //
 // Update the mode based on the current time, execute transition, and set the
 // timer for the next tick.
-func Tick(currentLocation geoclue.Location) {
+func Tick(currentLocation geoclue.Location, transitions chan Mode) {
 	now := time.Now().UTC()
 	sunrise, sundown, err := SunriseAndSundown(currentLocation, now)
 	if err != nil {
@@ -135,8 +131,9 @@ func init() {
 
 func main() {
 	var currentLocation *geoclue.Location
-	locations = make(chan geoclue.Location)
-	transitions = make(chan Mode)
+	locations := make(chan geoclue.Location)
+	transitions := make(chan Mode)
+	dbusServer := NewDbusServer()
 
 	initialLocation, err := config.GetLocation()
 	if err != nil {
@@ -158,12 +155,12 @@ func main() {
 			}
 
 			currentLocation = &newLocation
-			Tick(*currentLocation)
+			Tick(*currentLocation, transitions)
 		}
 	}()
 
 	// Initialise the location services:
-	locationService, err = StartLocationService(locations)
+	locationService, err := StartLocationService(locations)
 	if err != nil {
 		log.Printf("Could not start location service: %v.\n", err)
 	}
@@ -180,7 +177,7 @@ func main() {
 					log.Printf("Failed to poll location: %v\n", err)
 				}
 			}
-			Tick(*currentLocation)
+			Tick(*currentLocation, transitions)
 		}
 	}()
 
