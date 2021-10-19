@@ -8,18 +8,16 @@ import (
 )
 
 type TransitionHandler struct {
+	currentMode     Mode
 	currentLocation *geoclue.Location
 	dbusServer      ServerHandle
-	transitions     chan Mode
 }
 
 func NewTransitionHandler(dbusServer ServerHandle) TransitionHandler {
 	handler := TransitionHandler{
+		currentMode: NULL,
 		dbusServer:  dbusServer,
-		transitions: make(chan Mode),
 	}
-
-	go handler.waitForTransitions()
 
 	return handler
 }
@@ -52,7 +50,7 @@ func (handler *TransitionHandler) Tick() {
 	}
 
 	mode := GetCurrentMode(now, sunrise, sundown)
-	handler.transitions <- mode
+	handler.applyTransitions(mode)
 
 	sunrise, sundown, err = NextSunriseAndSundown(*handler.currentLocation, now, sunrise, sundown)
 	if err != nil {
@@ -62,20 +60,15 @@ func (handler *TransitionHandler) Tick() {
 	setNextAlarm(now, mode, sunrise, sundown)
 }
 
-/// Waits for transitions to happen and executes necessary actions.
-func (handler *TransitionHandler) waitForTransitions() {
-	previousMode := NULL
-	for {
-		mode := <-handler.transitions
-
-		log.Printf("Mode should now be: %v mode.\n", mode)
-		if mode == previousMode {
-			log.Println("No transition necessary")
-			continue
-		}
-
-		RunScripts(mode)
-		handler.dbusServer.ChangeMode(string(mode))
-		previousMode = mode
+/// Apply a transition if applicable.
+func (handler *TransitionHandler) applyTransitions(mode Mode) {
+	log.Printf("Mode should now be: %v mode.\n", mode)
+	if mode == handler.currentMode {
+		log.Println("No transition necessary")
+		return
 	}
+
+	RunScripts(mode)
+	handler.dbusServer.ChangeMode(string(mode))
+	handler.currentMode = mode
 }
