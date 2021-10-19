@@ -115,15 +115,15 @@ func main() {
 		log.Println("Found location in config:", initialLocation)
 	}
 
-	transitionHandler := NewTransitionHandler()
+	scheduler := NewScheduler()
 	locationService := NewLocationService(initialLocation)
-	transitionHandler.AddListener(RunScriptsListener())
+	scheduler.AddListener(RunScriptsListener())
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
 		// TODO: if init fails, don't register it.
 		dbusServer := NewDbusServer()
-		transitionHandler.AddListener(dbusServer.C)
+		scheduler.AddListener(dbusServer.C)
 	} else {
 		log.Println("Running without D-Bus server.")
 	}
@@ -133,7 +133,7 @@ func main() {
 		for {
 			newLocation := <-locationService.C
 			log.Println("Location service has yielded:", newLocation)
-			transitionHandler.UpdateLocation(newLocation)
+			scheduler.UpdateLocation(newLocation)
 		}
 	}()
 
@@ -148,7 +148,7 @@ func main() {
 				log.Printf("Failed to poll location: %v\n", err)
 			}
 
-			transitionHandler.Tick()
+			scheduler.Tick()
 		}
 	}()
 

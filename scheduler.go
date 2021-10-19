@@ -7,25 +7,25 @@ import (
 	"gitlab.com/WhyNotHugo/darkman/geoclue"
 )
 
-type TransitionHandler struct {
+type Scheduler struct {
 	currentMode     Mode
 	currentLocation *geoclue.Location
 	listeners       []chan Mode
 }
 
-func NewTransitionHandler() TransitionHandler {
-	handler := TransitionHandler{
+func NewScheduler() Scheduler {
+	handler := Scheduler{
 		currentMode: NULL,
 	}
 
 	return handler
 }
 
-func (handler *TransitionHandler) AddListener(c chan Mode) {
+func (handler *Scheduler) AddListener(c chan Mode) {
 	handler.listeners = append(handler.listeners, c)
 }
 
-func (handler *TransitionHandler) UpdateLocation(newLocation geoclue.Location) {
+func (handler *Scheduler) UpdateLocation(newLocation geoclue.Location) {
 	if handler.currentLocation != nil && newLocation == *handler.currentLocation {
 		log.Println("Location has not changed, nothing to do.")
 		return
@@ -39,7 +39,7 @@ func (handler *TransitionHandler) UpdateLocation(newLocation geoclue.Location) {
 //
 // Update the mode based on the current time, execute transition, and set the
 // timer for the next tick.
-func (handler *TransitionHandler) Tick() {
+func (handler *Scheduler) Tick() {
 	if handler.currentLocation == nil {
 		log.Println("No location yet, nothing to do.")
 		return
@@ -53,7 +53,7 @@ func (handler *TransitionHandler) Tick() {
 	}
 
 	mode := GetCurrentMode(now, sunrise, sundown)
-	handler.applyTransitions(mode)
+	handler.notifyListeners(mode)
 
 	sunrise, sundown, err = NextSunriseAndSundown(*handler.currentLocation, now, sunrise, sundown)
 	if err != nil {
@@ -64,7 +64,7 @@ func (handler *TransitionHandler) Tick() {
 }
 
 /// Apply a transition if applicable.
-func (handler *TransitionHandler) applyTransitions(mode Mode) {
+func (handler *Scheduler) notifyListeners(mode Mode) {
 	log.Printf("Mode should now be: %v mode.\n", mode)
 	if mode == handler.currentMode {
 		log.Println("No transition necessary")
