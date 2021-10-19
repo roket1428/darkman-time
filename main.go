@@ -117,6 +117,7 @@ func main() {
 
 	transitionHandler := NewTransitionHandler()
 	locationService := NewLocationService(initialLocation)
+	transitionHandler.AddListener(RunScriptsListener())
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")

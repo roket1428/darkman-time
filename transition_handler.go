@@ -71,9 +71,8 @@ func (handler *TransitionHandler) applyTransitions(mode Mode) {
 		return
 	}
 
-	RunScripts(mode)
+	handler.currentMode = mode
 	for _, c := range handler.listeners {
 		c <- mode
 	}
-	handler.currentMode = mode
 }
