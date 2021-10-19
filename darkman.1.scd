@@ -37,10 +37,14 @@ format of:
 ```
 lat: 52.3
 lng: 4.8
+dbusserver: true
 ```
 
 You generally don't need more than one decimal point for your location. See
 https://xkcd.com/2170/ for details.
+
+The `dbusserver` setting defines whether darkman should expose the current
+mode via its D-Bus API or not.
 
 # ENVIRONMENT
 
@@ -52,6 +56,9 @@ _DARKMAN_LAT_
 
 _DARKMAN_LNG_
 	Overrides the longitude for the current location.
+
+_DARKMAN_DBUSSERVER_
+	Overrides whether to expose the current mode via D-Bus.
 
 ## LICENCE
 

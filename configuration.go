@@ -13,6 +13,7 @@ type Config struct {
 	Lat        float64
 	Lng        float64
 	UseGeoclue bool // TODO: Not yet implemented
+	DBusServer bool
 }
 
 func ReadConfig() (*Config, error) {
@@ -27,6 +28,7 @@ func ReadConfig() (*Config, error) {
 	viper.SetDefault("Lat", -1)
 	viper.SetDefault("Lng", -1)
 	viper.SetDefault("UseGeoclue", true)
+	viper.SetDefault("DBusServer", true)
 
 	err = viper.ReadInConfig()
 	if err == nil {

@@ -115,9 +115,17 @@ func main() {
 		log.Println("Found location in config:", initialLocation)
 	}
 
-	dbusServer := NewDbusServer()
-	transitionHandler := NewTransitionHandler(dbusServer)
+	transitionHandler := NewTransitionHandler()
 	locationService := NewLocationService(initialLocation)
+
+	if config.DBusServer {
+		log.Println("Running with D-Bus server.")
+		// TODO: if init fails, don't register it.
+		dbusServer := NewDbusServer()
+		transitionHandler.AddListener(dbusServer.C)
+	} else {
+		log.Println("Running without D-Bus server.")
+	}
 
 	// Listen for location changes and pass them to the handler.
 	go func() {

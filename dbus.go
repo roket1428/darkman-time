@@ -13,9 +13,10 @@ type ServerHandle struct {
 	conn *dbus.Conn
 	mode string
 	prop *prop.Properties
+	C    chan Mode
 }
 
-func (handle *ServerHandle) ChangeMode(newMode string) {
+func (handle *ServerHandle) changeMode(newMode string) {
 	if handle.conn == nil {
 		if err := handle.start(); err != nil {
 			log.Printf("Could not start D-Bus server: %v", err)
@@ -37,7 +38,18 @@ func (handle *ServerHandle) Close() error {
 }
 
 func NewDbusServer() ServerHandle {
-	return ServerHandle{}
+	handle := ServerHandle{
+		C: make(chan Mode),
+	}
+
+	go func(){
+		mode := <- handle.C
+		handle.changeMode(string(mode))
+	}()
+
+	// TODO: When implement new tri-state API, start at this point.
+
+	return handle
 }
 
 func (handle *ServerHandle) start() (err error) {

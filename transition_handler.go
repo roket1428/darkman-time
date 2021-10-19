@@ -10,16 +10,19 @@ import (
 type TransitionHandler struct {
 	currentMode     Mode
 	currentLocation *geoclue.Location
-	dbusServer      ServerHandle
+	listeners       []chan Mode
 }
 
-func NewTransitionHandler(dbusServer ServerHandle) TransitionHandler {
+func NewTransitionHandler() TransitionHandler {
 	handler := TransitionHandler{
 		currentMode: NULL,
-		dbusServer:  dbusServer,
 	}
 
 	return handler
+}
+
+func (handler *TransitionHandler) AddListener(c chan Mode) {
+	handler.listeners = append(handler.listeners, c)
 }
 
 func (handler *TransitionHandler) UpdateLocation(newLocation geoclue.Location) {
@@ -69,6 +72,8 @@ func (handler *TransitionHandler) applyTransitions(mode Mode) {
 	}
 
 	RunScripts(mode)
-	handler.dbusServer.ChangeMode(string(mode))
+	for _, c := range handler.listeners {
+		c <- mode
+	}
 	handler.currentMode = mode
 }
