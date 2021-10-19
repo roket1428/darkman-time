@@ -34,7 +34,7 @@ func ReadConfig() (*Config, error) {
 	if err == nil {
 		log.Println("Using config file:", viper.ConfigFileUsed())
 	} else {
-		log.Println("Could not read configuration file, ", err)
+		log.Println(err)
 	}
 
 	// Load env vars (e.g.: DARKMAN_LAT) too.
