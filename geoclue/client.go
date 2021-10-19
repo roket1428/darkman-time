@@ -2,15 +2,20 @@ package geoclue
 
 import (
 	"fmt"
-	"github.com/godbus/dbus/v5"
 	"log"
+	"time"
+
+	"github.com/godbus/dbus/v5"
 )
 
+const TIMEOUT_DURATION = time.Minute
+
 type Geoclient struct {
-	Id         string
-	Locations  chan Location
-	conn       *dbus.Conn
-	clientPath dbus.ObjectPath
+	Id           string
+	Locations    chan Location
+	conn         *dbus.Conn
+	clientPath   dbus.ObjectPath
+	timeoutTimer *time.Timer
 }
 
 type Location struct {
@@ -54,6 +59,10 @@ func (client *Geoclient) listerForLocation() error {
 			if s.Name != "org.freedesktop.GeoClue2.Client.LocationUpdated" {
 				log.Println("Got an unrelated event? ", s)
 				continue
+			}
+
+			if client.timeoutTimer != nil {
+				client.timeoutTimer.Stop()
 			}
 
 			// Geoclue gives us the path to a new object that has
@@ -120,6 +129,11 @@ func (client Geoclient) StartClient() error {
 	if err == nil {
 		log.Println("Client started.")
 	}
+	client.timeoutTimer = time.NewTimer(TIMEOUT_DURATION)
+	go func() {
+		<-client.timeoutTimer.C
+		log.Println("WARNING! Geoclue server hasn't responded. Is it working? Been waiting for:", TIMEOUT_DURATION)
+	}()
 
 	return err
 }
@@ -130,6 +144,10 @@ func (client Geoclient) StopClient() error {
 
 	if err == nil {
 		log.Println("Client stopped.")
+	}
+
+	if client.timeoutTimer != nil {
+		client.timeoutTimer.Stop()
 	}
 
 	return err
