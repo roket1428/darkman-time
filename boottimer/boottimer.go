@@ -31,7 +31,8 @@ func SetTimer(d time.Duration) {
 	C.timer_create(C.CLOCK_BOOTTIME, nil, &timer)
 
 	seconds := d.Round(time.Second).Seconds()
-	log.Printf("Setting timer for %v seconds.\n", seconds)
+	ns := (d - d.Truncate(time.Second)).Nanoseconds()
+	log.Printf("Setting timer for %v.%v seconds.\n", seconds, ns)
 
 	var spec = C.struct_itimerspec{
 		it_interval: C.struct_timespec{
@@ -40,7 +41,7 @@ func SetTimer(d time.Duration) {
 		},
 		it_value: C.struct_timespec{
 			tv_sec:  C.long(seconds),
-			tv_nsec: 0,
+			tv_nsec: C.long(ns),
 		},
 	}
 
