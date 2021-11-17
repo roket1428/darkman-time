@@ -31,7 +31,7 @@ configuration file or a environment variables.
 darkman requires no configuration, but you may, optionally, provide your
 geolocation.
 
-Configuration is read from `~/.config/darkman/config.yaml`, and takes the
+Configuration is read from _~/.config/darkman/config.yaml_, and takes the
 format of:
 
 ```
