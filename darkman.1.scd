@@ -60,6 +60,6 @@ _DARKMAN_LNG_
 _DARKMAN_DBUSSERVER_
 	Overrides whether to expose the current mode via D-Bus.
 
-## LICENCE
+# LICENCE
 
 darkman is licensed under the ISC licence. See LICENCE for details.
