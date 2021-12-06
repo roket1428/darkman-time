@@ -52,3 +52,10 @@ immediately.
 ## v0.5.1
 
 - A man page is not included.
+
+## v0.5.2
+
+- Add a warning if geoclue is not responding. This should help debug instances
+  where darkman isn't working because it can't figure out the current location.
+- boottimer: Improve precision of the timer.
+- Fix negative latitudes and longitudes not working.
