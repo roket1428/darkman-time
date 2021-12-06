@@ -10,8 +10,8 @@ import (
 )
 
 type Config struct {
-	Lat        float64
-	Lng        float64
+	Lat        *float64
+	Lng        *float64
 	UseGeoclue bool // TODO: Not yet implemented
 	DBusServer bool
 }
@@ -25,8 +25,8 @@ func ReadConfig() (*Config, error) {
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath(filePath)
 
-	viper.SetDefault("Lat", -1)
-	viper.SetDefault("Lng", -1)
+	viper.SetDefault("Lat", nil)
+	viper.SetDefault("Lng", nil)
 	viper.SetDefault("UseGeoclue", true)
 	viper.SetDefault("DBusServer", true)
 
@@ -51,13 +51,13 @@ func ReadConfig() (*Config, error) {
 }
 
 func (config *Config) GetLocation() (*geoclue.Location, error) {
-	if config.Lat < 0 || config.Lng < 0 {
+	if config.Lat == nil || config.Lng == nil {
 		return nil, fmt.Errorf("no valid location in the config")
 	}
 
 	location := geoclue.Location{
-		Lat: config.Lat,
-		Lng: config.Lng,
+		Lat: *config.Lat,
+		Lng: *config.Lng,
 	}
 
 	return &location, nil
