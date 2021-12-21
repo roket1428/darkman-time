@@ -1,0 +1,73 @@
+#!/bin/sh
+
+set -eu
+
+DBUS_NAME="nl.whynothugo.darkman"
+DBUS_PATH="/nl/whynothugo/darkman"
+DBUS_IFAC_PROP="org.freedesktop.DBus.Properties"
+DBUS_IFAC_DARKMAN="nl.whynothugo.darkman"
+
+die(){ printf "%s\n" "${1}" >&2; exit 1; }
+
+show_help() {
+	# Below, each line starts with a tab character
+	cat <<-EOH
+	Usage: $(basename $0) <command> [parameters]"
+	Commands:
+	  get-mode		Print the curent mode
+	  set-mode MODE		Sets the curent mode. Valid modes are light or dark.
+	  toggle-mode		Toggle mode
+	  help			Show this help prompt
+	EOH
+}
+dbus_send_checked() {
+	dbus-send "$@" \
+		|| die "Command failed. Try checking the arguments and make sure darkman is running."
+}
+
+method_call() {
+	dbus_send_checked --print-reply=literal --dest="${DBUS_NAME}" "${DBUS_PATH}" "$@"
+}
+
+property_get() {
+	dbus_send_checked --print-reply=literal --dest="${DBUS_NAME}" "${DBUS_PATH}" "${DBUS_IFAC_PROP}.Get" "string:${DBUS_IFAC_DARKMAN}" "string:${1}"
+}
+
+property_set() {
+	dbus_send_checked --print-reply=literal --dest="${DBUS_NAME}" "${DBUS_PATH}" "${DBUS_IFAC_PROP}.Set" "string:${DBUS_IFAC_DARKMAN}" "string:${1}" "${2}"
+}
+
+is_dark() {
+	mode=$(property_get "Mode")
+	echo $mode | grep -q "light" && return 1
+	echo $mode | grep -q "dark" && return 0
+	echo "Current mode \"$mode\" is invalid"
+	exit 1
+}
+
+command -v dbus-send >/dev/null 2>/dev/null || \
+	die "Command dbus-send not found"
+
+
+case "${1:-}" in
+	"get-mode")
+		is_dark && echo "dark" || echo "light"
+		;;
+	"set-mode")
+		property_set "Mode" "string:$2"
+		;;
+	"toggle-mode")
+		is_dark && property_set "Mode" "string:light" ||
+			property_set "Mode" "string:dark"
+		;;
+	"help"|"--help"|"-h")
+		show_help
+		;;
+	"")
+		die "$(basename $0): No command specified. Please consult the usage."
+		;;
+	*)
+		die "$(basename $0): unrecognized command '${1:-}'. Please consult the usage."
+		;;
+esac
+# vim: noexpandtab
