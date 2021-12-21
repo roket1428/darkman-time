@@ -33,6 +33,24 @@ func (handle *ServerHandle) changeMode(newMode string) {
 	}
 }
 
+func (handle *ServerHandle) handleChangeMode(c *prop.Change) *dbus.Error {
+	newMode := Mode(c.Value.(string))
+	if (newMode != DARK && newMode != LIGHT) {
+		log.Printf("Mode %s is invalid", newMode)
+		return prop.ErrInvalidArg
+	}
+
+	handle.mode = c.Value.(string)
+	err := handle.conn.Emit("/nl/whynothugo/darkman", "nl.whynothugo.darkman.ModeChanged", handle.mode)
+	if err != nil {
+		log.Printf("Couldn't emit signal")
+		return nil
+	}
+	RunScripts(newMode);
+	return nil
+}
+
+
 func (handle *ServerHandle) Close() error {
 	return handle.conn.Close()
 }
@@ -62,8 +80,9 @@ func (handle *ServerHandle) start() (err error) {
 		"nl.whynothugo.darkman": {
 			"Mode": {
 				Value:    handle.mode,
-				Writable: false,
+				Writable: true,
 				Emit:     prop.EmitTrue,
+				Callback: handle.handleChangeMode,
 			},
 		},
 	}

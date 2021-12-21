@@ -5,7 +5,7 @@
       <signal name="ModeChanged">
          <arg name="NewMode" type="s" />
       </signal>
-      <property name="Mode" type="s" access="read">
+      <property name="Mode" type="s" access="write">
          <annotation name="org.freedesktop.DBus.Property.EmitsChangedSignal" value="true" />
       </property>
    </interface>
