@@ -59,3 +59,9 @@ immediately.
   where darkman isn't working because it can't figure out the current location.
 - boottimer: Improve precision of the timer.
 - Fix negative latitudes and longitudes not working.
+
+## v0.5.3
+
+- Changing the current mode via the D-Bus API is now possible.
+- A `darkmanctl` contrib script is now included to manually transition the
+  current mode.
