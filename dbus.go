@@ -35,7 +35,7 @@ func (handle *ServerHandle) changeMode(newMode string) {
 
 func (handle *ServerHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 	newMode := Mode(c.Value.(string))
-	if (newMode != DARK && newMode != LIGHT) {
+	if newMode != DARK && newMode != LIGHT {
 		log.Printf("Mode %s is invalid", newMode)
 		return prop.ErrInvalidArg
 	}
@@ -46,10 +46,9 @@ func (handle *ServerHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 		log.Printf("Couldn't emit signal")
 		return nil
 	}
-	RunScripts(newMode);
+	RunScripts(newMode)
 	return nil
 }
-
 
 func (handle *ServerHandle) Close() error {
 	return handle.conn.Close()
@@ -60,8 +59,8 @@ func NewDbusServer() ServerHandle {
 		C: make(chan Mode),
 	}
 
-	go func(){
-		mode := <- handle.C
+	go func() {
+		mode := <-handle.C
 		handle.changeMode(string(mode))
 	}()
 
