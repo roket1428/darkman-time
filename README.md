@@ -55,7 +55,7 @@ in this package. You'll need to drop-in the scripts you desire.
 
 When it starts, darkman tries to determine your current location:
 
-- The config file (no yet implemented).
+- The config file.
 - The cache file from last time it ran.
 - Using the system [`geoclue`](https://directory.fsf.org/wiki/Geoclue).
 
