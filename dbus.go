@@ -13,7 +13,7 @@ type ServerHandle struct {
 	conn *dbus.Conn
 	mode string
 	prop *prop.Properties
-	C    chan Mode
+	c    chan Mode
 }
 
 func (handle *ServerHandle) changeMode(newMode string) {
@@ -54,18 +54,19 @@ func (handle *ServerHandle) Close() error {
 	return handle.conn.Close()
 }
 
-func NewDbusServer() ServerHandle {
+func NewDbusServer(scheduler Scheduler) ServerHandle {
 	handle := ServerHandle{
-		C: make(chan Mode),
+		c: make(chan Mode),
 	}
 
 	go func() {
-		mode := <-handle.C
+		mode := <-handle.c
 		handle.changeMode(string(mode))
 	}()
 
 	// TODO: When implement new tri-state API, start at this point.
 
+	scheduler.AddListener(handle.c)
 	return handle
 }
 

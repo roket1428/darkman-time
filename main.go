@@ -121,9 +121,7 @@ func main() {
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
-		// TODO: if init fails, don't register it.
-		dbusServer := NewDbusServer()
-		scheduler.AddListener(dbusServer.C)
+		NewDbusServer(scheduler)
 	} else {
 		log.Println("Running without D-Bus server.")
 	}
