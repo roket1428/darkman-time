@@ -8,6 +8,7 @@ BindsTo=graphical-session.target
 ExecStart=/usr/bin/darkman
 Restart=on-failure
 TimeoutStopSec=15
+Slice=background.slice
 
 [Install]
 WantedBy=graphical-session.target
