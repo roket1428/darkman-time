@@ -162,3 +162,14 @@ func (client Geoclient) StopClient() error {
 
 	return err
 }
+
+// Check if the client is currently active or inactive.
+func (client Geoclient) IsActive() (active bool, err error) {
+	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
+	err = obj.StoreProperty("org.freedesktop.GeoClue2.Client.Active", &active)
+	if err != nil {
+		return false, fmt.Errorf("error reading Active prop: %v", err)
+	}
+
+	return
+}
