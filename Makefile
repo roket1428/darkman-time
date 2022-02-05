@@ -16,6 +16,8 @@ install:
 	@install -Dm644 LICENCE 	${DESTDIR}${PREFIX}/share/licenses/darkman/LICENCE
 	@install -Dm644 _darkmanctl.zsh ${DESTDIR}${PREFIX}/share/zsh/site-functions/_darkmanctl
 	@install -Dm644 darkmanctl.bash ${DESTDIR}${PREFIX}/share/bash-completion/completions/darkmanctl
+	@install -Dm644 contrib/dbus/nl.whynothugo.darkman.service \
+		${DESTDIR}${PREFIX}/share/dbus-1/services/nl.whynothugo.darkman.service
 
 aur:
 	git subtree push -P contrib/aur ssh://aur@aur.archlinux.org/darkman.git master
