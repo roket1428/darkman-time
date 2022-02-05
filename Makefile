@@ -2,11 +2,13 @@ DESTDIR?=/
 PREFIX=/usr
 
 build:
-	go build -ldflags '-s'
+	go build
+	go build -o darkmanctl ./ctl
 	scdoc < darkman.1.scd > darkman.1
 
 install:
 	@install -Dm755 darkman 	${DESTDIR}${PREFIX}/bin/darkman
+	@install -Dm755 darkmanctl 	${DESTDIR}${PREFIX}/bin/darkmanctl
 	@install -Dm644 darkman.service	${DESTDIR}${PREFIX}/lib/systemd/user/darkman.service
 	@install -Dm644 darkman.1	${DESTDIR}${PREFIX}/share/man/man1/darkman.1
 	@install -Dm644 LICENCE 	${DESTDIR}${PREFIX}/share/licenses/${pkgname}/LICENCE
