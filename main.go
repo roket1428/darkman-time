@@ -42,13 +42,7 @@ func NextSunriseAndSundown(loc geoclue.Location, now time.Time, curSunrise time.
 	if sunrise.Before(now) {
 		var sundownTomorrow time.Time
 
-		p := sunrisesunset.Parameters{
-			Latitude:  loc.Lat,
-			Longitude: loc.Lng,
-			UtcOffset: 0,
-			Date:      now.Add(time.Hour * 24),
-		}
-		sunrise, sundownTomorrow, err = p.GetSunriseSunset()
+		sunrise, sundownTomorrow, err = SunriseAndSundown(loc, now.Add(time.Hour * 24))
 		if err != nil {
 			return
 		}
