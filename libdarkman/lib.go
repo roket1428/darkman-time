@@ -10,7 +10,7 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
-const PROP = "nl.whynothugo.darkman.Mode"
+const prop = "nl.whynothugo.darkman.Mode"
 
 func getDBusObj() (*dbus.BusObject, error) {
 	conn, err := dbus.ConnectSessionBus()
@@ -43,7 +43,7 @@ func SetMode(mode string) error {
 		return err
 	}
 
-	err = (*obj).SetProperty(PROP, dbus.MakeVariant(mode))
+	err = (*obj).SetProperty(prop, dbus.MakeVariant(mode))
 	if err != nil {
 		return fmt.Errorf("error setting property: %v", err)
 	}
@@ -58,7 +58,7 @@ func GetMode() (mode string, err error) {
 		return "", err
 	}
 
-	err = (*obj).StoreProperty(PROP, &mode)
+	err = (*obj).StoreProperty(prop, &mode)
 	if err != nil {
 		return "", fmt.Errorf("error reading property: %v", err)
 	}
@@ -75,7 +75,7 @@ func ToggleMode() (mode string, err error) {
 		return "", err
 	}
 
-	err = (*obj).StoreProperty(PROP, &mode)
+	err = (*obj).StoreProperty(prop, &mode)
 	if err != nil {
 		return "", fmt.Errorf("error reading property: %v", err)
 	}
@@ -86,7 +86,7 @@ func ToggleMode() (mode string, err error) {
 		mode = "light"
 	}
 
-	err = (*obj).SetProperty(PROP, dbus.MakeVariant(mode))
+	err = (*obj).SetProperty(prop, dbus.MakeVariant(mode))
 	if err != nil {
 		return "", fmt.Errorf("error setting property: %v", err)
 	}
