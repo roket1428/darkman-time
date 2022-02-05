@@ -4,6 +4,7 @@ import (
 	"log"
 	"time"
 
+	"gitlab.com/WhyNotHugo/darkman/boottimer"
 	"gitlab.com/WhyNotHugo/darkman/geoclue"
 )
 
@@ -75,4 +76,20 @@ func (handler *Scheduler) notifyListeners(mode Mode) {
 	for _, c := range handler.listeners {
 		c <- mode
 	}
+}
+
+func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.Time) {
+	log.Println("Next sunrise:", sunrise)
+	log.Println("Next sundown:", sundown)
+
+	var nextTick time.Time
+	if curMode == DARK {
+		nextTick = sunrise
+	} else {
+		nextTick = sundown
+	}
+
+	sleepFor := nextTick.Sub(now)
+
+	boottimer.SetTimer(sleepFor)
 }
