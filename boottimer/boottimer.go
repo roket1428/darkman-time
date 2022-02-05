@@ -1,3 +1,4 @@
+// Package boottimer provides a timer that is accurate over suspend.
 package boottimer
 
 import (
@@ -7,8 +8,6 @@ import (
 	"syscall"
 	"time"
 )
-
-// Package boottimer provides a timer that is accurate over suspend.
 
 // #cgo LDFLAGS: -lrt
 //

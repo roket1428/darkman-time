@@ -1,3 +1,4 @@
+// Package geoclue implements a client for Geoclue's D-Bus.
 package geoclue
 
 import (
@@ -7,8 +8,6 @@ import (
 
 	"github.com/godbus/dbus/v5"
 )
-
-// Package geoclue implements a client for Geoclue's D-Bus.
 
 // A handle for a client connection to Geoclue.
 type Geoclient struct {

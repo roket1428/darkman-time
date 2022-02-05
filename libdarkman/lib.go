@@ -1,3 +1,7 @@
+// Package implementing a wrapper around darkman's D-Bus API.
+//
+// It may be used by client applications needing to query or change the current
+// mode.
 package libdarkman
 
 import (
@@ -5,11 +9,6 @@ import (
 
 	"github.com/godbus/dbus/v5"
 )
-
-// Package implementing a wrapper around darkman's D-Bus API.
-//
-// It may be used by client applications needing to query or change the current
-// mode.
 
 const PROP = "nl.whynothugo.darkman.Mode"
 
