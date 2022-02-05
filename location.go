@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	"github.com/adrg/xdg"
 
@@ -59,7 +60,7 @@ func readLocationFromCache() (location *geoclue.Location) {
 }
 
 func initGeoclue(c chan geoclue.Location) (client *geoclue.Geoclient, err error) {
-	client, err = geoclue.NewClient("darkman")
+	client, err = geoclue.NewClient("darkman", time.Minute)
 	if err != nil {
 		return nil, err
 	}

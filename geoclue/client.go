@@ -8,13 +8,13 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
-const TIMEOUT_DURATION = time.Minute
-
+// A handle for a client connection to Geoclue.
 type Geoclient struct {
 	Id           string
 	Locations    chan Location
 	conn         *dbus.Conn
 	clientPath   dbus.ObjectPath
+	timeout      time.Duration
 	timeoutTimer *time.Timer
 }
 
@@ -93,7 +93,10 @@ func (client *Geoclient) listerForLocation() error {
 	return nil
 }
 
-func NewClient(id string) (*Geoclient, error) {
+// Initialise a new geoclue client.
+// If geoclue does not return any location within timeout, a warning is
+// emmited.
+func NewClient(id string, timeout time.Duration) (*Geoclient, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, err
@@ -118,6 +121,7 @@ func NewClient(id string) (*Geoclient, error) {
 		Locations:  make(chan Location, 10),
 		clientPath: clientPath,
 		conn:       conn,
+		timeout:    timeout,
 	}
 
 	err = client.listerForLocation()
@@ -135,10 +139,10 @@ func (client Geoclient) StartClient() error {
 	if err == nil {
 		log.Println("Client started.")
 	}
-	client.timeoutTimer = time.NewTimer(TIMEOUT_DURATION)
+	client.timeoutTimer = time.NewTimer(client.timeout)
 	go func() {
 		<-client.timeoutTimer.C
-		log.Println("WARNING! Geoclue server hasn't responded. Is it working? Been waiting for:", TIMEOUT_DURATION)
+		log.Println("WARNING! Geoclue server hasn't responded. Is it working? Been waiting for:", client.timeout)
 	}()
 
 	return err
