@@ -5,16 +5,14 @@ A framework for dark-mode and light-mode transitions on Linux desktop.
 
 ## Introduction
 
-`darkman` runs in the background and turns on night mode at sundown, and turns it off
+`darkman` runs in the background and turns on dark mode at sundown, and turns it off
 again at sunrise. `darkman` is not designed to be used interactively: it's designed to
 be set up once, and run in the background.
 
 At sundown, it will look for scripts in `$XDG_DATA_DIRS/dark-mode.d/`.
 At sunrise, it will look for scripts in `$XDG_DATA_DIRS/light-mode.d/`.
 
-These scripts individually configure different components and applications. Given the
-lack of normalised "dark-mode" APIs on Linux desktop, it's likely that scripts for
-different applications and toolkits have to be dumped in.
+These scripts individually configure different components and applications.
 
 Sample and reference scripts are included in this repository, and further
 contributions for specific tools or environments are welcome.
@@ -25,8 +23,9 @@ Hint: `$XDG_DATA_DIRS` usually matches these, amongst others:
     /usr/local/share/
     /usr/share/
 
-The variety here allows packages to include their own drop-in scripts. The order of
-precedence is also important, so you can mask scripts.
+Packages may also drop-in their own scripts into any of these locations,
+although application developers are encouraged to use the D-Bus API to
+determine the current mode and listen for changes (see below for mode details).
 
 ## Installation
 
@@ -48,8 +47,12 @@ is included:
 
     systemctl --user enable --now darkman.service
 
-Note that the dark-mode and light-mode scripts mentioned above are not included
-in this package. You'll need to drop-in the scripts you desire.
+`darkman` **DOES NOT** depend on systemd, and is usable on non-systemd
+distributions.
+
+Note that the dark-mode and light-mode scripts mentioned above (and available
+in the source repository) are not included in this package. You'll need to
+drop-in the scripts you desire.
 
 ## How it works
 
@@ -65,14 +68,17 @@ switch to dark mode or light mode accordingly.
 Finally, it'll set a timer for the next sundown / sunrise (whichever comes
 first), to switch to the opposite mode, set another timer, and sleep again.
 
-It's designed to run as a service and require as little intervention
-as possible.
+It's designed to run as a service and require as little intervention as
+possible.
+
+It is possible to manually query or change the current mode using the
+`darkmanctl` command line helper.
 
 ## Configuration
 
 See [the man page](darkman.1.scd) (`man darkman`) for configuration details.
 
-### D-Bus service
+## D-Bus service
 
 A D-Bus endpoint is also exposed. There's a property to determine the current
 mode (`Mode`), and a signal to listen to changes (`ModeChanged`). Third-party
@@ -82,9 +88,6 @@ dark mode.
 See [dbus-api.xml](dbus-api.xml) for an XML description/introspection of the
 service.
 
-A `darkmanctl` helper command is also included to query this API from the
-command line.
-
 A `libdarkman` go package is available to query the same D-Bus API from other
 client applications written in go. See [its documentation][libdarkman] for
 details.
@@ -93,14 +96,18 @@ details.
 
 ## Development
 
-`darkman` already works, but is still under development.
+`darkman` works well and actively maintained.
 
 For bug and suggestions, see [Issues][issues] on GitLab. Ongoing research is
 also gathered into these issues.
 
+If you find the tool useful, please, considering [sponsoring its
+development][ko-fi].
+
 Feel free to join the IRC channel: #whynothugo on irc.libera.chat.
 
 [issues]: https://gitlab.com/WhyNotHugo/darkman/-/issues
+[ko-fi]: https://ko-fi.com/whynothugo
 
 ## LICENCE
 
