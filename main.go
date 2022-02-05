@@ -4,7 +4,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/kelvins/sunrisesunset"
+	"github.com/sj14/astral"
 
 	"gitlab.com/WhyNotHugo/darkman/boottimer"
 	"gitlab.com/WhyNotHugo/darkman/geoclue"
@@ -23,14 +23,17 @@ var (
 )
 
 func SunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Time, sundown time.Time, err error) {
-	p := sunrisesunset.Parameters{
+	obs := astral.Observer{
 		Latitude:  loc.Lat,
 		Longitude: loc.Lng,
-		UtcOffset: 0,
-		Date:      now,
+		Elevation: loc.Alt,
 	}
-	sunrise, sundown, err = p.GetSunriseSunset()
+	sunrise, err = astral.Sunrise(obs, now)
+	if err != nil {
+		return
+	}
 
+	sundown, err = astral.Sunset(obs, now)
 	return
 }
 

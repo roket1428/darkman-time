@@ -21,6 +21,7 @@ type Geoclient struct {
 type Location struct {
 	Lat float64 `json:"lat"`
 	Lng float64 `json:"lng"`
+	Alt float64 `json:"Alt"`
 }
 
 func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (location *Location, err error) {
@@ -36,6 +37,11 @@ func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (location *Loc
 	err = obj.StoreProperty("org.freedesktop.GeoClue2.Location.Longitude", &location.Lng)
 	if err != nil {
 		return nil, fmt.Errorf("error reading Longitude: %v", err)
+	}
+
+	err = obj.StoreProperty("org.freedesktop.GeoClue2.Location.Altitude", &location.Alt)
+	if err != nil {
+		return nil, fmt.Errorf("error reading Altitude: %v", err)
 	}
 
 	return
