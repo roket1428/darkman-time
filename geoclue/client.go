@@ -8,6 +8,8 @@ import (
 	"github.com/godbus/dbus/v5"
 )
 
+// Package geoclue implements a client for Geoclue's D-Bus.
+
 // A handle for a client connection to Geoclue.
 type Geoclient struct {
 	Id           string
@@ -94,9 +96,14 @@ func (client *Geoclient) listerForLocation() error {
 }
 
 // Initialise a new geoclue client.
-// If geoclue does not return any location within timeout, a warning is
-// emmited.
-func NewClient(id string, timeout time.Duration) (*Geoclient, error) {
+//
+// The desktopId parameter is passed onto geoclue. It should match the calling
+// application's desktop file id (the basename of the desktop file), and is
+// used for authorization to work.
+//
+// If geoclue does not return any location within the specified timeout, a
+// warning is emmited.
+func NewClient(desktopId string, timeout time.Duration) (*Geoclient, error) {
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, err
@@ -111,13 +118,13 @@ func NewClient(id string, timeout time.Duration) (*Geoclient, error) {
 	}
 
 	obj = conn.Object("org.freedesktop.GeoClue2", clientPath)
-	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.DesktopId", dbus.MakeVariant(id))
+	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.DesktopId", dbus.MakeVariant(desktopId))
 	if err != nil {
 		return nil, fmt.Errorf("setting DesktopId failed: %v", err)
 	}
 
 	client := &Geoclient{
-		Id:         id,
+		Id:         desktopId,
 		Locations:  make(chan Location, 10),
 		clientPath: clientPath,
 		conn:       conn,
@@ -132,6 +139,10 @@ func NewClient(id string, timeout time.Duration) (*Geoclient, error) {
 	return client, nil
 }
 
+// Start searching for a location.
+// Once a location is returned by geoclue, it will be returned via this
+// instance's Locations channel. Searching for new locations will immediately
+// be stopped after the first result.
 func (client Geoclient) StartClient() error {
 	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
 	err := obj.Call("org.freedesktop.GeoClue2.Client.Start", 0).Err
@@ -140,6 +151,7 @@ func (client Geoclient) StartClient() error {
 		log.Println("Client started.")
 	}
 	client.timeoutTimer = time.NewTimer(client.timeout)
+	// FIXME: This goroutine is never cleaned up.
 	go func() {
 		<-client.timeoutTimer.C
 		log.Println("WARNING! Geoclue server hasn't responded. Is it working? Been waiting for:", client.timeout)
@@ -148,6 +160,8 @@ func (client Geoclient) StartClient() error {
 	return err
 }
 
+// Stop searching for a location.
+// This function is safe to call even if the client is not currently running.
 func (client Geoclient) StopClient() error {
 	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
 	err := obj.Call("org.freedesktop.GeoClue2.Client.Stop", 0).Err
