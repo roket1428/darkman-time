@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+// Package boottimer provides a timer that is accurate over suspend.
+
 // #cgo LDFLAGS: -lrt
 //
 // #include <signal.h>
@@ -24,7 +26,10 @@ var (
 // clock reflects the period that it was offline, which avoids the timer
 // getting "postponed" due to the system sleeping.
 //
-// Because this uses a POSIX alarm under the hook, all alarms are notified via
+// If a timer were to expire at a time when the system is still suspended, it
+// will expire as soon as the system wakes up again.
+//
+// Because this uses a POSIX alarm under the hood, all alarms are notified via
 // the same channel `Alarms` above.
 func SetTimer(d time.Duration) {
 	var timer C.timer_t
