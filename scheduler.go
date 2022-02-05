@@ -11,19 +11,21 @@ import (
 type Scheduler struct {
 	currentMode     Mode
 	currentLocation *geoclue.Location
-	listeners       []chan Mode
+	listeners       *[]chan Mode
 }
 
+// The scheduler schedules timer to wake up in time for the next sundown/sunrise.
 func NewScheduler() Scheduler {
 	handler := Scheduler{
 		currentMode: NULL,
+		listeners:   &[]chan Mode{},
 	}
 
 	return handler
 }
 
 func (handler *Scheduler) AddListener(c chan Mode) {
-	handler.listeners = append(handler.listeners, c)
+	*handler.listeners = append(*handler.listeners, c)
 }
 
 func (handler *Scheduler) UpdateLocation(newLocation geoclue.Location) {
@@ -73,7 +75,7 @@ func (handler *Scheduler) notifyListeners(mode Mode) {
 	}
 
 	handler.currentMode = mode
-	for _, c := range handler.listeners {
+	for _, c := range *handler.listeners {
 		c <- mode
 	}
 }
