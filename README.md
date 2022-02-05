@@ -82,6 +82,15 @@ dark mode.
 See [dbus-api.xml](dbus-api.xml) for an XML description/introspection of the
 service.
 
+A `darkmanctl` helper command is also included to query this API from the
+command line.
+
+A `libdarkman` go package is available to query the same D-Bus API from other
+client applications written in go. See [its documentation][libdarkman] for
+details.
+
+[libdarkman]: https://godocs.io/gitlab.com/WhyNotHugo/darkman/libdarkman
+
 ## Development
 
 `darkman` already works, but is still under development.

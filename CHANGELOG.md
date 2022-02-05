@@ -65,3 +65,10 @@ immediately.
 - Changing the current mode via the D-Bus API is now possible.
 - A `darkmanctl` contrib script is now included to manually transition the
   current mode.
+
+## v0.6.0
+
+- A bug where the D-Bus server sometimes failed to start has been fixed.
+- `darkmanctl` is now installed by default, along with shell completions for it.
+- A go package is included to query and control the current mode from other go
+  applications.
