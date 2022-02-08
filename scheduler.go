@@ -55,7 +55,7 @@ func (handler *Scheduler) Tick() {
 		log.Fatalln("Error calculating today's sundown/sunrise", err)
 	}
 
-	mode := GetCurrentMode(now, sunrise, sundown)
+	mode := CalculateCurrentMode(now, sunrise, sundown)
 	handler.notifyListeners(mode)
 
 	sunrise, sundown, err = NextSunriseAndSundown(*handler.currentLocation, now, sunrise, sundown)

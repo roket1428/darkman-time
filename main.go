@@ -63,7 +63,7 @@ func NextSunriseAndSundown(loc geoclue.Location, now time.Time, curSunrise time.
 	return
 }
 
-func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) Mode {
+func CalculateCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) Mode {
 	// Add one minute here to compensate for rounding.
 	// When woken up by the clock, it might be a few milliseconds too early
 	// due to rounding. Rather than seek to be more precise (which is
@@ -132,7 +132,6 @@ func ExecuteService() {
 	}()
 
 	err = GetLocations(initialLocation, locations)
-
 	if err != nil {
 		log.Println("Could not start location service:", err)
 	}
