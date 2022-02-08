@@ -72,3 +72,10 @@ immediately.
 - `darkmanctl` is now installed by default, along with shell completions for it.
 - A go package is included to query and control the current mode from other go
   applications.
+
+## v0.7.0
+
+- `darkmanctl` has been merged into separate commands of `darkman`. This avoids
+  installing a second binary, reduces installation size around half, and the
+  new command is shorter to type. If you run darkman via an init script or
+  alike, update it to execute `darkmanctl run` instead of just `darkman`.

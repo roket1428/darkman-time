@@ -1,4 +1,8 @@
-package main
+// Package darkman implements darkman's service itself.
+//
+// This package is used by gitlab.com/WhyNotHugo/darkman/cmd, which is the cli
+// that wraps around the service and the client.
+package darkman
 
 import (
 	"log"
@@ -78,17 +82,15 @@ func GetCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) Mode {
 	}
 }
 
-func init() {
+func ExecuteService() {
 	log.SetFlags(log.Lshortfile)
 
-	var err error
+	var err error // Declared to avoid creating a local variable `config`.
 	config, err = ReadConfig()
 	if err != nil {
 		log.Println("Could not read configuration file:", err)
 	}
-}
 
-func main() {
 	initialLocation, err := config.GetLocation()
 	if err != nil {
 		log.Println("No location found via config.")

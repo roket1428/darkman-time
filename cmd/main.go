@@ -3,8 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"gitlab.com/WhyNotHugo/darkman"
 	"gitlab.com/WhyNotHugo/darkman/libdarkman"
 )
 
@@ -12,6 +14,27 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "darkmanctl",
 	Short: "Query and control darkman from the command line",
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// TODO Drop before v1.0.0
+		if filepath.Base(os.Args[0]) == "darkmanctl" {
+			fmt.Println("`darkmanctl` is deprecated; use `darkman` instead.")
+		}
+	},
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// This function gets run when no other command is specified.
+		// If this command was run as `darkman`, then run the run
+		// (this is legacy-compat mode). Otherwise, print usage.
+
+		if filepath.Base(os.Args[0]) == "darkman" {
+			// TODO Drop before v1.0.0
+			fmt.Println("Running `darkman` without arguments is deprecated. Use `darkman run` instead")
+
+			darkman.ExecuteService()
+			return nil
+		} else {
+			return cmd.Usage()
+		}
+	},
 }
 
 var setCmd = &cobra.Command{
@@ -52,10 +75,23 @@ var toggleCmd = &cobra.Command{
 	},
 }
 
+var runCmd = &cobra.Command{
+	Use:   "run",
+	Short: "Run the darkman service",
+	Long: `This command starts the darkman service itself. It should only
+be used by a service manager, by a  session init script or alike.
+
+The service will run in foreground.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		darkman.ExecuteService()
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(setCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(toggleCmd)
+	rootCmd.AddCommand(runCmd)
 }
 
 func main() {
