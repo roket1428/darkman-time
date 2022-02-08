@@ -81,3 +81,5 @@ immediately.
   alike, update it to execute `darkmanctl run` instead of just `darkman`.
 - How we interact with geoclue has been simplified a bit -- we delegate more to
   geoclue rather than such continuos control over it.
+- Calculation of next sundown and sunrise has been simplified, as well as
+  reducing unnecessary calculations.

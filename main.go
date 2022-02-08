@@ -26,6 +26,7 @@ var (
 	config *Config
 )
 
+// Return the time for sunrise and sundown for a given day and location.
 func SunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Time, sundown time.Time, err error) {
 	obs := astral.Observer{
 		Latitude:  loc.Lat,
@@ -41,15 +42,16 @@ func SunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Time, 
 	return
 }
 
-func NextSunriseAndSundown(loc geoclue.Location, now time.Time, curSunrise time.Time, curSundown time.Time) (sunrise time.Time, sundown time.Time, err error) {
-	sunrise = curSunrise
-	sundown = curSundown
+// Returns the time of the next sunrise and the next sundown.
+// Note that they next sundown may be before the next sunrise or viceversa.
+func NextSunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Time, sundown time.Time, err error) {
+	sunrise, sundown, err = SunriseAndSundown(loc, now)
 
 	// If sunrise has passed today, the next one is tomorrow:
 	if sunrise.Before(now) {
 		var sundownTomorrow time.Time
 
-		sunrise, sundownTomorrow, err = SunriseAndSundown(loc, now.Add(time.Hour * 24))
+		sunrise, sundownTomorrow, err = SunriseAndSundown(loc, now.Add(time.Hour*24))
 		if err != nil {
 			return
 		}
@@ -63,22 +65,13 @@ func NextSunriseAndSundown(loc geoclue.Location, now time.Time, curSunrise time.
 	return
 }
 
-func CalculateCurrentMode(now time.Time, sunrise time.Time, sundown time.Time) Mode {
-	// Add one minute here to compensate for rounding.
-	// When woken up by the clock, it might be a few milliseconds too early
-	// due to rounding. Rather than seek to be more precise (which is
-	// unnecessary), just do what we'd do in a minute.
-	now = now.Add(time.Minute)
-
-	if now.Before(sunrise) {
-		log.Println("It's before sunrise.")
+func CalculateCurrentMode(nextSunrise time.Time, nextSundown time.Time) Mode {
+	if nextSunrise.Before(nextSundown) {
+		log.Println("Sunrise comes first; so it's night time.")
 		return DARK
-	} else if now.Before(sundown) {
-		log.Println("It's past sunrise and before sundown.")
-		return LIGHT
 	} else {
-		log.Println("It's past sundown.")
-		return DARK
+		log.Println("Sundown comes first; so it's day time.")
+		return LIGHT
 	}
 }
 

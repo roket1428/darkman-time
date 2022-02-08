@@ -49,20 +49,24 @@ func (handler *Scheduler) Tick() {
 	}
 
 	now := time.Now().UTC()
-	sunrise, sundown, err := SunriseAndSundown(*handler.currentLocation, now)
-	if err != nil {
-		// This is fatal; there's nothing we can do if this fails.
-		log.Fatalln("Error calculating today's sundown/sunrise", err)
-	}
 
-	mode := CalculateCurrentMode(now, sunrise, sundown)
-	handler.notifyListeners(mode)
-
-	sunrise, sundown, err = NextSunriseAndSundown(*handler.currentLocation, now, sunrise, sundown)
+	// Add one minute here to compensate for rounding.
+	//
+	// When woken up by the clock, it might be a few milliseconds too early
+	// due to rounding. Rather than seek to be more precise (which is
+	// unnecessary), just do what we'd do in a minute.
+	//
+	// TODO: with recent changes, this might no longer be necessary, but
+	// needs to be well tested.
+	sunrise, sundown, err := NextSunriseAndSundown(*handler.currentLocation, now.Add(time.Minute))
 	if err != nil {
 		log.Printf("Error calculating next sundown/sunrise: %v", err)
 		return
 	}
+
+	mode := CalculateCurrentMode(sunrise, sundown)
+	handler.notifyListeners(mode)
+
 	setNextAlarm(now, mode, sunrise, sundown)
 }
 
@@ -85,13 +89,12 @@ func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.T
 	log.Println("Next sundown:", sundown)
 
 	var nextTick time.Time
-	if curMode == DARK {
+	if sunrise.Before(sundown) {
 		nextTick = sunrise
 	} else {
 		nextTick = sundown
 	}
 
 	sleepFor := nextTick.Sub(now)
-
 	boottimer.SetTimer(sleepFor)
 }
