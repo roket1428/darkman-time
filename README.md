@@ -72,7 +72,7 @@ It's designed to run as a service and require as little intervention as
 possible.
 
 It is possible to manually query or change the current mode using the
-`darkmanctl` command line helper.
+`darkman`. See `darkman --help` for details.
 
 ## Configuration
 
