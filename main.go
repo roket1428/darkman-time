@@ -58,11 +58,6 @@ func ExecuteService() {
 	go func() {
 		for {
 			<-boottimer.Alarms
-
-			if err != nil {
-				log.Printf("Failed to poll location: %v\n", err)
-			}
-
 			scheduler.Tick()
 		}
 	}()
