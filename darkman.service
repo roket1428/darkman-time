@@ -7,7 +7,7 @@ BindsTo=graphical-session.target
 [Service]
 Type=dbus
 BusName=nl.whynothugo.darkman
-ExecStart=/usr/bin/darkman
+ExecStart=/usr/bin/darkman run
 Restart=on-failure
 TimeoutStopSec=15
 Slice=background.slice
