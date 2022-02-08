@@ -6,9 +6,6 @@ package darkman
 
 import (
 	"log"
-	"time"
-
-	"github.com/sj14/astral"
 
 	"gitlab.com/WhyNotHugo/darkman/boottimer"
 	"gitlab.com/WhyNotHugo/darkman/geoclue"
@@ -25,55 +22,6 @@ const (
 var (
 	config *Config
 )
-
-// Return the time for sunrise and sundown for a given day and location.
-func SunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Time, sundown time.Time, err error) {
-	obs := astral.Observer{
-		Latitude:  loc.Lat,
-		Longitude: loc.Lng,
-		Elevation: loc.Alt,
-	}
-	sunrise, err = astral.Sunrise(obs, now)
-	if err != nil {
-		return
-	}
-
-	sundown, err = astral.Sunset(obs, now)
-	return
-}
-
-// Returns the time of the next sunrise and the next sundown.
-// Note that they next sundown may be before the next sunrise or viceversa.
-func NextSunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Time, sundown time.Time, err error) {
-	sunrise, sundown, err = SunriseAndSundown(loc, now)
-
-	// If sunrise has passed today, the next one is tomorrow:
-	if sunrise.Before(now) {
-		var sundownTomorrow time.Time
-
-		sunrise, sundownTomorrow, err = SunriseAndSundown(loc, now.Add(time.Hour*24))
-		if err != nil {
-			return
-		}
-
-		// It might also be past sundown today:
-		if sundown.Before(now) {
-			sundown = sundownTomorrow
-		}
-	}
-
-	return
-}
-
-func CalculateCurrentMode(nextSunrise time.Time, nextSundown time.Time) Mode {
-	if nextSunrise.Before(nextSundown) {
-		log.Println("Sunrise comes first; so it's night time.")
-		return DARK
-	} else {
-		log.Println("Sundown comes first; so it's day time.")
-		return LIGHT
-	}
-}
 
 func ExecuteService() {
 	log.SetFlags(log.Lshortfile)
