@@ -66,10 +66,10 @@ var toggleCmd = &cobra.Command{
 	Short: "Toggle the current mode",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		mode, err := libdarkman.ToggleMode()
-
 		if err != nil {
 			return err
 		}
+
 		fmt.Println(mode)
 		return nil
 	},

@@ -122,6 +122,7 @@ func ExecuteService() {
 	go func() {
 		for {
 			<-boottimer.Alarms
+
 			// On wakeup, poll location again.
 			// This'll generally be just twice a day.
 			err = locationService.Poll()
