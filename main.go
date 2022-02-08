@@ -19,15 +19,10 @@ const (
 	DARK  Mode = "dark"
 )
 
-var (
-	config *Config
-)
-
 func ExecuteService() {
 	log.SetFlags(log.Lshortfile)
 
-	var err error // Declared to avoid creating a local variable `config`.
-	config, err = ReadConfig()
+	config, err := ReadConfig()
 	if err != nil {
 		log.Println("Could not read configuration file:", err)
 	}
