@@ -79,3 +79,5 @@ immediately.
   installing a second binary, reduces installation size around half, and the
   new command is shorter to type. If you run darkman via an init script or
   alike, update it to execute `darkmanctl run` instead of just `darkman`.
+- How we interact with geoclue has been simplified a bit -- we delegate more to
+  geoclue rather than such continuos control over it.

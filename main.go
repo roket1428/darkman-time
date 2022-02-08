@@ -99,7 +99,7 @@ func ExecuteService() {
 	}
 
 	scheduler := NewScheduler()
-	locationService := NewLocationService(initialLocation)
+	locations := make(chan geoclue.Location, 3)
 	scheduler.AddListener(RunScriptsListener())
 
 	if config.DBusServer {
@@ -112,7 +112,7 @@ func ExecuteService() {
 	// Listen for location changes and pass them to the handler.
 	go func() {
 		for {
-			newLocation := <-locationService.C
+			newLocation := <-locations
 			log.Println("Location service has yielded:", newLocation)
 			scheduler.UpdateLocation(newLocation)
 		}
@@ -123,9 +123,6 @@ func ExecuteService() {
 		for {
 			<-boottimer.Alarms
 
-			// On wakeup, poll location again.
-			// This'll generally be just twice a day.
-			err = locationService.Poll()
 			if err != nil {
 				log.Printf("Failed to poll location: %v\n", err)
 			}
@@ -134,7 +131,8 @@ func ExecuteService() {
 		}
 	}()
 
-	err = locationService.Poll()
+	err = GetLocations(initialLocation, locations)
+
 	if err != nil {
 		log.Println("Could not start location service:", err)
 	}

@@ -15,7 +15,6 @@ type Geoclient struct {
 	Locations    chan Location
 	conn         *dbus.Conn
 	clientPath   dbus.ObjectPath
-	timeout      time.Duration
 	timeoutTimer *time.Timer
 }
 
@@ -58,8 +57,10 @@ func (client *Geoclient) listerForLocation() error {
 		return fmt.Errorf("error listening for signal: %v", err)
 	}
 
+	// TODO: Should handle the connection to geoclue dying.
+
 	go func() {
-		c2 := make(chan *dbus.Signal, 10)
+		c2 := make(chan *dbus.Signal, 3)
 		client.conn.Signal(c2)
 		for {
 			s := <-c2
@@ -68,9 +69,7 @@ func (client *Geoclient) listerForLocation() error {
 				continue
 			}
 
-			if client.timeoutTimer != nil {
-				client.timeoutTimer.Stop()
-			}
+			client.timeoutTimer.Stop()
 
 			// Geoclue gives us the path to a new object that has
 			// the location data, hence, "newPath".
@@ -102,7 +101,14 @@ func (client *Geoclient) listerForLocation() error {
 //
 // If geoclue does not return any location within the specified timeout, a
 // warning is emmited.
-func NewClient(desktopId string, timeout time.Duration) (*Geoclient, error) {
+//
+// For details on DistanceThreshold and TimeThreshold see the documentation for
+// geoclue's D-Bus API:
+//
+//  - https://www.freedesktop.org/software/geoclue/docs/gdbus-org.freedesktop.GeoClue2.Client.html#gdbus-property-org-freedesktop-GeoClue2-Client.DistanceThreshold
+//  - https://www.freedesktop.org/software/geoclue/docs/gdbus-org.freedesktop.GeoClue2.Client.html#gdbus-property-org-freedesktop-GeoClue2-Client.TimeThreshold
+func NewClient(desktopId string, timeout time.Duration, distanceThreshold uint32, timeThreshold uint32) (*Geoclient, error) {
+	// TODO: take other params passed to the server here.
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
 		return nil, err
@@ -122,41 +128,45 @@ func NewClient(desktopId string, timeout time.Duration) (*Geoclient, error) {
 		return nil, fmt.Errorf("setting DesktopId failed: %v", err)
 	}
 
-	client := &Geoclient{
-		Id:         desktopId,
-		Locations:  make(chan Location, 10),
-		clientPath: clientPath,
-		conn:       conn,
-		timeout:    timeout,
+	obj = conn.Object("org.freedesktop.GeoClue2", clientPath)
+	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.DistanceThreshold", dbus.MakeVariant(distanceThreshold))
+	if err != nil {
+		return nil, fmt.Errorf("setting DistanceThreshold failed: %v", err)
 	}
+
+	obj = conn.Object("org.freedesktop.GeoClue2", clientPath)
+	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.TimeThreshold", dbus.MakeVariant(timeThreshold))
+	if err != nil {
+		return nil, fmt.Errorf("setting TimeThreshold failed: %v", err)
+	}
+
+	client := &Geoclient{
+		Id:           desktopId,
+		Locations:    make(chan Location, 3),
+		clientPath:   clientPath,
+		conn:         conn,
+		timeoutTimer: time.NewTimer(timeout),
+	}
+
+	// FIXME: This goroutine is never cleaned up.
+	go func() {
+		<-client.timeoutTimer.C
+		log.Println("WARNING! Geoclue server hasn't responded. Is it working? Been waiting for:", timeout)
+	}()
 
 	err = client.listerForLocation()
 	if err != nil {
 		return nil, err
 	}
 
-	return client, nil
-}
-
-// Start searching for a location.
-// Once a location is returned by geoclue, it will be returned via this
-// instance's Locations channel. Searching for new locations will immediately
-// be stopped after the first result.
-func (client Geoclient) StartClient() error {
-	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
-	err := obj.Call("org.freedesktop.GeoClue2.Client.Start", 0).Err
-
-	if err == nil {
-		log.Println("Client started.")
+	obj = client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
+	err = obj.Call("org.freedesktop.GeoClue2.Client.Start", 0).Err
+	if err != nil {
+		return nil, err
 	}
-	client.timeoutTimer = time.NewTimer(client.timeout)
-	// FIXME: This goroutine is never cleaned up.
-	go func() {
-		<-client.timeoutTimer.C
-		log.Println("WARNING! Geoclue server hasn't responded. Is it working? Been waiting for:", client.timeout)
-	}()
 
-	return err
+	log.Println("Geoclue client started.")
+	return client, nil
 }
 
 // Stop searching for a location.
@@ -169,9 +179,7 @@ func (client Geoclient) StopClient() error {
 		log.Println("Client stopped.")
 	}
 
-	if client.timeoutTimer != nil {
-		client.timeoutTimer.Stop()
-	}
+	client.timeoutTimer.Stop()
 
 	return err
 }

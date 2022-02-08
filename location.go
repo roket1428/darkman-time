@@ -35,7 +35,6 @@ func saveLocationToCache(loc geoclue.Location) error {
 	return err
 }
 
-// Resolves locations.
 func readLocationFromCache() (location *geoclue.Location) {
 	cacheFilePath, err := xdg.CacheFile("darkman/location.json")
 	if err != nil {
@@ -59,12 +58,14 @@ func readLocationFromCache() (location *geoclue.Location) {
 	return
 }
 
+// Initialise geoclue. Note that we have our own channel where we yield
+// locations, and Geoclient has its own. We act as middleman here since we also
+// keep the last location cached.
 func initGeoclue(c chan geoclue.Location) (client *geoclue.Geoclient, err error) {
-	client, err = geoclue.NewClient("darkman", time.Minute)
+	client, err = geoclue.NewClient("darkman", time.Minute, 40000, 3600*4)
 	if err != nil {
 		return nil, err
 	}
-	log.Println("Geoclue initialised.")
 
 	go func() {
 		for {
@@ -78,43 +79,22 @@ func initGeoclue(c chan geoclue.Location) (client *geoclue.Geoclient, err error)
 			}
 
 			c <- loc
-
-			err = client.StopClient()
-			if err != nil {
-				log.Fatalln("Error stopping client.", err)
-			}
 		}
 	}()
 
 	return
 }
 
-type LocationService struct {
-	C       chan geoclue.Location
-	geoclue *geoclue.Geoclient
-}
-
-// Update the location once, and go back to sleep.
-func (service LocationService) Poll() error {
-	if service.geoclue == nil {
-		var err error
-		service.geoclue, err = initGeoclue(service.C)
-
-		if err != nil {
-			return fmt.Errorf("error initialising geoclue: %v", err)
-		}
-
-	}
-
-	return service.geoclue.StartClient()
-}
-
-func NewLocationService(initial *geoclue.Location) LocationService {
-	service := LocationService{
-		C:       make(chan geoclue.Location, 1),
-		geoclue: nil,
-	}
-
+// Periodically fetch the current location.
+//
+// When initialised, it'll yield an initial location, or fall back to a cached
+// one if none is passed.
+//
+// It'll then initialise geoclue, and yield locations that it sends.
+// My default, we indicate set geoclue in a rather passive mode; it'll ignore
+// location changes that occurr in less than four hours, or of less than 40km.
+func GetLocations(initial *geoclue.Location, c chan geoclue.Location) (err error) {
+	// TODO: Should take a context to kill the client.
 	if initial == nil {
 		initial = readLocationFromCache()
 		if initial != nil {
@@ -123,9 +103,14 @@ func NewLocationService(initial *geoclue.Location) LocationService {
 	}
 
 	if initial != nil {
-		service.C <- *initial
+		c <- *initial
 	}
 
-	return service
+	_, err = initGeoclue(c)
+	if err != nil {
+		return fmt.Errorf("error initialising geoclue: %v", err)
+	}
+
+	return nil
 
 }
