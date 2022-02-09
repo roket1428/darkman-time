@@ -8,9 +8,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sync"
 
 	"github.com/adrg/xdg"
 )
+
+var scriptsRunning sync.Mutex
 
 /// Tiny helper that waits for mode changes and runs all scripts.
 func RunScriptsListener() chan Mode {
@@ -55,8 +58,11 @@ func RunScripts(mode Mode) {
 		}
 	}
 
-	for _, executable := range executables {
-		go func(executable string) {
+	go func() {
+		scriptsRunning.Lock()
+		defer scriptsRunning.Unlock()
+
+		for _, executable := range executables {
 			log.Printf("Running %v...", executable)
 
 			cmd := exec.Command("bash", "-c", executable)
@@ -67,6 +73,6 @@ func RunScripts(mode Mode) {
 			if err != nil {
 				log.Printf("Failed to run: %v.\n", err.Error())
 			}
-		}(executable)
-	}
+		}
+	}()
 }

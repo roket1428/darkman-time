@@ -83,3 +83,8 @@ immediately.
   geoclue rather than such continuos control over it.
 - Calculation of next sundown and sunrise has been simplified, as well as
   reducing unnecessary calculations.
+
+## 0.7.1
+
+- Avoid scripts running concurrently (this could only happen in some very
+  unusual wake-up scenarios with very specific timing).
