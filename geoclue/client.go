@@ -65,7 +65,7 @@ func (client *Geoclient) listerForLocation() error {
 		for {
 			s := <-c2
 			if s.Name != "org.freedesktop.GeoClue2.Client.LocationUpdated" {
-				log.Println("Got an unrelated event? ", s)
+				log.Println("geoclue: Got an unrelated event? ", s)
 				continue
 			}
 
@@ -75,17 +75,17 @@ func (client *Geoclient) listerForLocation() error {
 			// the location data, hence, "newPath".
 			newPath, ok := s.Body[1].(dbus.ObjectPath)
 			if !ok {
-				log.Println("Failed to parse signal location: ", ok)
+				log.Println("geoclue: failed to parse signal location: ", ok)
 				continue
 			}
 
 			location, err := client.getUpdatedLocation(newPath)
 			if err != nil {
-				log.Println("Failed to obtain updated location: ", err)
+				log.Println("geoclue: failed to obtain updated location: ", err)
 				continue
 			}
 
-			log.Println("Resolved a new location: ", location)
+			log.Println("geoclue: resolved a new location: ", location)
 			client.Locations <- *location
 		}
 	}()
@@ -151,7 +151,7 @@ func NewClient(desktopId string, timeout time.Duration, distanceThreshold uint32
 	// FIXME: This goroutine is never cleaned up.
 	go func() {
 		<-client.timeoutTimer.C
-		log.Println("WARNING! Geoclue server hasn't responded. Is it working? Been waiting for:", timeout)
+		log.Println("geoclue: WARNING! the server hasn't responded; is it working? Timeout is:", timeout)
 	}()
 
 	err = client.listerForLocation()
@@ -165,7 +165,7 @@ func NewClient(desktopId string, timeout time.Duration, distanceThreshold uint32
 		return nil, err
 	}
 
-	log.Println("Geoclue client started.")
+	log.Println("geoclue: client started.")
 	return client, nil
 }
 
@@ -176,7 +176,7 @@ func (client Geoclient) StopClient() error {
 	err := obj.Call("org.freedesktop.GeoClue2.Client.Stop", 0).Err
 
 	if err == nil {
-		log.Println("Client stopped.")
+		log.Println("geoclue: client stopped.")
 	}
 
 	client.timeoutTimer.Stop()

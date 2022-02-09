@@ -142,8 +142,10 @@ func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.T
 	var nextTick time.Time
 	if sunrise.Before(sundown) {
 		nextTick = sunrise
+		log.Println("Will set an alarm for sunrise")
 	} else {
 		nextTick = sundown
+		log.Println("Will set an alarm for sundown")
 	}
 
 	sleepFor := nextTick.Sub(now)
