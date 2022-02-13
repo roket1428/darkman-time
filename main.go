@@ -34,7 +34,7 @@ func ExecuteService() {
 	}
 
 	scheduler := NewScheduler()
-	scheduler.AddListener(RunScriptsListener())
+	scheduler.AddListener(RunScripts)
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")

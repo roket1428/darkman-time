@@ -16,7 +16,7 @@ type ServerHandle struct {
 	c    chan Mode
 }
 
-func (handle *ServerHandle) changeMode(newMode string) {
+func (handle *ServerHandle) changeMode(newMode Mode) {
 	if handle.conn == nil {
 		if err := handle.start(); err != nil {
 			log.Printf("Could not start D-Bus server: %v", err)
@@ -24,9 +24,9 @@ func (handle *ServerHandle) changeMode(newMode string) {
 		}
 	}
 
-	handle.mode = newMode
-	err := handle.conn.Emit("/nl/whynothugo/darkman", "nl.whynothugo.darkman.ModeChanged", newMode)
-	handle.prop.SetMust("nl.whynothugo.darkman", "Mode", newMode)
+	handle.mode = string(newMode)
+	err := handle.conn.Emit("/nl/whynothugo/darkman", "nl.whynothugo.darkman.ModeChanged", handle.mode)
+	handle.prop.SetMust("nl.whynothugo.darkman", "Mode", handle.mode)
 
 	if err != nil {
 		log.Printf("couldn't emit signal: %v", err)
@@ -59,14 +59,7 @@ func NewDbusServer(scheduler Scheduler) ServerHandle {
 		c: make(chan Mode),
 	}
 
-	go func() {
-		mode := <-handle.c
-		handle.changeMode(string(mode))
-	}()
-
-	// TODO: When implement new tri-state API, start at this point.
-
-	scheduler.AddListener(handle.c)
+	scheduler.AddListener(handle.changeMode)
 	return handle
 }
 

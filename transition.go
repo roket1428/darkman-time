@@ -15,19 +15,6 @@ import (
 
 var scriptsRunning sync.Mutex
 
-/// Tiny helper that waits for mode changes and runs all scripts.
-func RunScriptsListener() chan Mode {
-	c := make(chan Mode)
-	go func() {
-		// Each time there's a mode change, run all scripts.
-		for {
-			RunScripts(<-c)
-		}
-	}()
-
-	return c
-}
-
 /// Run transition scripts for a given mode.
 ///
 /// Fires up all scripts asyncrhonously and returns immediately.
