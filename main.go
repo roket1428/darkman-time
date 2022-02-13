@@ -36,7 +36,8 @@ func ExecuteService() {
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
-		NewDbusServer(scheduler)
+		_, dbusCallback := NewDbusServer()
+		scheduler.AddListener(dbusCallback)
 	} else {
 		log.Println("Running without D-Bus server.")
 	}

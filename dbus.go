@@ -54,13 +54,16 @@ func (handle *ServerHandle) Close() error {
 	return handle.conn.Close()
 }
 
-func NewDbusServer(scheduler Scheduler) ServerHandle {
+/// Create a new D-Bus server instance for our API.
+/// 
+/// Returns a callback function which should be called each time the current
+/// mode changes.
+func NewDbusServer() (ServerHandle, func(Mode)) {
 	handle := ServerHandle{
 		c: make(chan Mode),
 	}
 
-	scheduler.AddListener(handle.changeMode)
-	return handle
+	return handle, handle.changeMode
 }
 
 func (handle *ServerHandle) start() (err error) {
