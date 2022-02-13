@@ -61,7 +61,7 @@ func readLocationFromCache() (location *geoclue.Location) {
 // Initialise geoclue. Note that we have our own channel where we yield
 // locations, and Geoclient has its own. We act as middleman here since we also
 // keep the last location cached.
-func initGeoclue(c chan geoclue.Location) (client *geoclue.Geoclient, err error) {
+func initGeoclue(onLocation func(geoclue.Location)) (client *geoclue.Geoclient, err error) {
 	client, err = geoclue.NewClient("darkman", time.Minute, 40000, 3600*4)
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func initGeoclue(c chan geoclue.Location) (client *geoclue.Geoclient, err error)
 				log.Println("Saved location to cache.")
 			}
 
-			c <- loc
+			onLocation(loc)
 		}
 	}()
 
@@ -93,7 +93,7 @@ func initGeoclue(c chan geoclue.Location) (client *geoclue.Geoclient, err error)
 // It'll then initialise geoclue, and yield locations that it sends.
 // My default, we indicate set geoclue in a rather passive mode; it'll ignore
 // location changes that occurr in less than four hours, or of less than 40km.
-func GetLocations(initial *geoclue.Location, c chan geoclue.Location) (err error) {
+func GetLocations(initial *geoclue.Location, onLocation func(geoclue.Location)) (err error) {
 	// TODO: Should take a context to kill the client.
 	if initial == nil {
 		initial = readLocationFromCache()
@@ -103,10 +103,10 @@ func GetLocations(initial *geoclue.Location, c chan geoclue.Location) (err error
 	}
 
 	if initial != nil {
-		c <- *initial
+		onLocation(*initial)
 	}
 
-	_, err = initGeoclue(c)
+	_, err = initGeoclue(onLocation)
 	if err != nil {
 		return fmt.Errorf("error initialising geoclue: %v", err)
 	}

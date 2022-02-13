@@ -8,7 +8,6 @@ import (
 	"log"
 
 	"gitlab.com/WhyNotHugo/darkman/boottimer"
-	"gitlab.com/WhyNotHugo/darkman/geoclue"
 )
 
 type Mode string
@@ -35,7 +34,6 @@ func ExecuteService() {
 	}
 
 	scheduler := NewScheduler()
-	locations := make(chan geoclue.Location, 3)
 	scheduler.AddListener(RunScriptsListener())
 
 	if config.DBusServer {
@@ -45,15 +43,6 @@ func ExecuteService() {
 		log.Println("Running without D-Bus server.")
 	}
 
-	// Listen for location changes and pass them to the handler.
-	go func() {
-		for {
-			newLocation := <-locations
-			log.Println("Location service has yielded:", newLocation)
-			scheduler.UpdateLocation(newLocation)
-		}
-	}()
-
 	// Alarms wake us up when it's time for the next transition.
 	go func() {
 		for {
@@ -62,7 +51,7 @@ func ExecuteService() {
 		}
 	}()
 
-	err = GetLocations(initialLocation, locations)
+	err = GetLocations(initialLocation, scheduler.UpdateLocation)
 	if err != nil {
 		log.Println("Could not start location service:", err)
 	}
