@@ -66,13 +66,26 @@ type Scheduler struct {
 }
 
 // The scheduler schedules timer to wake up in time for the next sundown/sunrise.
-func NewScheduler() Scheduler {
-	handler := Scheduler{
+func NewScheduler(initialLocation *geoclue.Location) Scheduler {
+	scheduler := Scheduler{
 		currentMode: NULL,
 		listeners:   &[]func(Mode){},
 	}
 
-	return handler
+	// Alarms wake us up when it's time for the next transition.
+	go func() {
+		for {
+			<-boottimer.Alarms
+			scheduler.Tick()
+		}
+	}()
+
+	err := GetLocations(initialLocation, scheduler.UpdateLocation)
+	if err != nil {
+		log.Println("Could not start location service:", err)
+	}
+
+	return scheduler
 }
 
 func (handler *Scheduler) AddListener(listener func(Mode)) {

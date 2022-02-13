@@ -6,8 +6,6 @@ package darkman
 
 import (
 	"log"
-
-	"gitlab.com/WhyNotHugo/darkman/boottimer"
 )
 
 type Mode string
@@ -33,7 +31,7 @@ func ExecuteService() {
 		log.Println("Found location in config:", initialLocation)
 	}
 
-	scheduler := NewScheduler()
+	scheduler := NewScheduler(initialLocation)
 	scheduler.AddListener(RunScripts)
 
 	if config.DBusServer {
@@ -41,19 +39,6 @@ func ExecuteService() {
 		NewDbusServer(scheduler)
 	} else {
 		log.Println("Running without D-Bus server.")
-	}
-
-	// Alarms wake us up when it's time for the next transition.
-	go func() {
-		for {
-			<-boottimer.Alarms
-			scheduler.Tick()
-		}
-	}()
-
-	err = GetLocations(initialLocation, scheduler.UpdateLocation)
-	if err != nil {
-		log.Println("Could not start location service:", err)
 	}
 
 	// Sleep silently forever...
