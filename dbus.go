@@ -96,7 +96,7 @@ func (handle *ServerHandle) start() (err error) {
 		return fmt.Errorf("failed to export interface: %v", err)
 	}
 
-	signal := introspect.Signal{
+	modeChanged := introspect.Signal{
 		Name: "ModeChanged",
 		Args: []introspect.Arg{
 			{
@@ -113,7 +113,7 @@ func (handle *ServerHandle) start() (err error) {
 			prop.IntrospectData,
 			{
 				Name:       "nl.whynothugo.darkman",
-				Signals:    []introspect.Signal{signal},
+				Signals:    []introspect.Signal{modeChanged},
 				Properties: handle.prop.Introspection("nl.whynothugo.darkman"),
 			},
 		},
