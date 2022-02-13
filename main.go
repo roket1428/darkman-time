@@ -9,6 +9,10 @@ import (
 )
 
 type Mode string
+type Service struct {
+	currentMode Mode
+	listeners   *[]func(Mode)
+}
 
 const (
 	NULL  Mode = "null" // Only used while still initialising.
@@ -16,6 +20,26 @@ const (
 	DARK  Mode = "dark"
 )
 
+/// Add a callback to be run each time the current mode changes.
+func (service *Service) AddListener(listener func(Mode)) {
+	*service.listeners = append(*service.listeners, listener)
+}
+
+/// Change the current mode (and run all callbacks).
+func (service *Service) ChangeMode(mode Mode) {
+	log.Printf("Mode should now be: %v mode.\n", mode)
+	if mode == service.currentMode {
+		log.Println("No transition necessary")
+		return
+	}
+
+	service.currentMode = mode
+	for _, listener := range *service.listeners {
+		go listener(mode)
+	}
+}
+
+/// Run the darkman service.
 func ExecuteService() {
 	log.SetFlags(log.Lshortfile)
 
@@ -31,13 +55,18 @@ func ExecuteService() {
 		log.Println("Found location in config:", initialLocation)
 	}
 
-	scheduler := NewScheduler(initialLocation)
-	scheduler.AddListener(RunScripts)
+	service := Service{
+		currentMode: NULL,
+		listeners:   &[]func(Mode){},
+	}
+	service.AddListener(RunScripts)
+
+	_ = NewScheduler(initialLocation, service.ChangeMode)
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
 		_, dbusCallback := NewDbusServer()
-		scheduler.AddListener(dbusCallback)
+		service.AddListener(dbusCallback)
 	} else {
 		log.Println("Running without D-Bus server.")
 	}

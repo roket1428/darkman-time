@@ -59,17 +59,17 @@ func CalculateCurrentMode(nextSunrise time.Time, nextSundown time.Time) Mode {
 	}
 }
 
+/// Scheduler handles setting timers based on the current location, and
+/// trigering changes based on the current location and sun position.
 type Scheduler struct {
-	currentMode     Mode
 	currentLocation *geoclue.Location
-	listeners       *[]func(Mode)
+	changeCallback  func(Mode)
 }
 
 // The scheduler schedules timer to wake up in time for the next sundown/sunrise.
-func NewScheduler(initialLocation *geoclue.Location) Scheduler {
+func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode)) Scheduler {
 	scheduler := Scheduler{
-		currentMode: NULL,
-		listeners:   &[]func(Mode){},
+		changeCallback: changeCallback,
 	}
 
 	// Alarms wake us up when it's time for the next transition.
@@ -86,10 +86,6 @@ func NewScheduler(initialLocation *geoclue.Location) Scheduler {
 	}
 
 	return scheduler
-}
-
-func (handler *Scheduler) AddListener(listener func(Mode)) {
-	*handler.listeners = append(*handler.listeners, listener)
 }
 
 func (handler *Scheduler) UpdateLocation(newLocation geoclue.Location) {
@@ -129,23 +125,9 @@ func (handler *Scheduler) Tick() {
 	}
 
 	mode := CalculateCurrentMode(sunrise, sundown)
-	handler.notifyListeners(mode)
+	handler.changeCallback(mode)
 
 	setNextAlarm(now, mode, sunrise, sundown)
-}
-
-/// Apply a transition if applicable.
-func (handler *Scheduler) notifyListeners(mode Mode) {
-	log.Printf("Mode should now be: %v mode.\n", mode)
-	if mode == handler.currentMode {
-		log.Println("No transition necessary")
-		return
-	}
-
-	handler.currentMode = mode
-	for _, listener := range *handler.listeners {
-		listener(mode)
-	}
 }
 
 func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.Time) {
