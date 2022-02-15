@@ -72,6 +72,7 @@ func (handle *ServerHandle) start() (err error) {
 		return fmt.Errorf("could not connect to session D-Bus: %v", err)
 	}
 
+	// Define the "Mode" prop.
 	propsSpec := map[string]map[string]*prop.Prop{
 		"nl.whynothugo.darkman": {
 			"Mode": {
@@ -82,16 +83,20 @@ func (handle *ServerHandle) start() (err error) {
 			},
 		},
 	}
+
+	// Export the "Mode" prop.
 	handle.prop, err = prop.Export(handle.conn, "/nl/whynothugo/darkman", propsSpec)
 	if err != nil {
 		return fmt.Errorf("failed to export D-Bus prop: %v", err)
 	}
 
+	// Export the D-Bus object.
 	err = handle.conn.Export(handle, "/nl/whynothugo/darkman", "nl.whynothugo.darkman")
 	if err != nil {
 		return fmt.Errorf("failed to export interface: %v", err)
 	}
 
+	// Declare our signal (for introspection only).
 	modeChanged := introspect.Signal{
 		Name: "ModeChanged",
 		Args: []introspect.Arg{
@@ -102,19 +107,23 @@ func (handle *ServerHandle) start() (err error) {
 		},
 	}
 
+	darkmanInterface := introspect.Interface{
+		Name:       "nl.whynothugo.darkman",
+		Signals:    []introspect.Signal{modeChanged},
+		Properties: handle.prop.Introspection("nl.whynothugo.darkman"),
+	}
+
+	// Declare our whole interface (for introspection only).
 	n := &introspect.Node{
 		Name: "/nl/whynothugo/darkman",
 		Interfaces: []introspect.Interface{
-			introspect.IntrospectData,
-			prop.IntrospectData,
-			{
-				Name:       "nl.whynothugo.darkman",
-				Signals:    []introspect.Signal{modeChanged},
-				Properties: handle.prop.Introspection("nl.whynothugo.darkman"),
-			},
+			introspect.IntrospectData, // introspection interface
+			prop.IntrospectData,       // prop read/set interface
+			darkmanInterface,          // darkman interface
 		},
 	}
 
+	// Export introspection data.
 	err = handle.conn.Export(
 		introspect.NewIntrospectable(n),
 		"/nl/whynothugo/darkman",
@@ -124,6 +133,7 @@ func (handle *ServerHandle) start() (err error) {
 		return fmt.Errorf("failed to export dbus name: %v", err)
 	}
 
+	// Register our D-Bus name.
 	reply, err := handle.conn.RequestName("nl.whynothugo.darkman", dbus.NameFlagDoNotQueue)
 	if err != nil {
 		return fmt.Errorf("failed to register dbus name: %v", err)
