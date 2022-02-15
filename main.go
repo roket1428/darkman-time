@@ -61,8 +61,6 @@ func ExecuteService() {
 	}
 	service.AddListener(RunScripts)
 
-	_ = NewScheduler(initialLocation, service.ChangeMode)
-
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
 		_, dbusCallback := NewDbusServer()
@@ -70,6 +68,10 @@ func ExecuteService() {
 	} else {
 		log.Println("Running without D-Bus server.")
 	}
+
+	// Start after registering all callbacks, so that the first changes
+	// are triggered after they're listening.
+	_ = NewScheduler(initialLocation, service.ChangeMode)
 
 	// Sleep silently forever...
 	select {}
