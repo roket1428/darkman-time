@@ -69,6 +69,14 @@ func ExecuteService() {
 		log.Println("Running without D-Bus server.")
 	}
 
+	if config.Portal {
+		log.Println("Running with XDG portal.")
+		_, portalCallback := NewPortal()
+		service.AddListener(portalCallback)
+	} else {
+		log.Println("Running without XDG portal.")
+	}
+
 	// Start after registering all callbacks, so that the first changes
 	// are triggered after they're listening.
 	_ = NewScheduler(initialLocation, service.ChangeMode)
