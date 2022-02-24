@@ -88,3 +88,11 @@ immediately.
 
 - Avoid scripts running concurrently (this could only happen in some very
   unusual wake-up scenarios with very specific timing).
+
+## 1.0.0
+
+- Support integration with the `xdg-desktop-portal`' [dark style preference
+  setting][xdp]. With this integration, applications using this portal will
+  also be aligned by darkman's current mode and transitions.
+
+[xdp]: https://github.com/flatpak/xdg-desktop-portal/issues/629
