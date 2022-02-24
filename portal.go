@@ -195,13 +195,13 @@ func (portal *PortalHandle) Read(namespace string, key string) (dbus.Variant, *d
 	return dbus.MakeVariant(portal.mode), nil
 }
 
-func (portal *PortalHandle) ReadAll(namespaces []string) (map[string]map[string]uint, *dbus.Error) {
-	values := map[string]map[string]uint{}
+func (portal *PortalHandle) ReadAll(namespaces []string) (map[string]map[string]dbus.Variant, *dbus.Error) {
+	values := map[string]map[string]dbus.Variant{}
 
-	for _, namespace := range(namespaces) {
+	for _, namespace := range namespaces {
 		if namespace == PORTAL_NAMESPACE {
-			values[PORTAL_NAMESPACE] = map[string]uint{
-				PORTAL_KEY: portal.mode,
+			values[PORTAL_NAMESPACE] = map[string]dbus.Variant{
+				PORTAL_KEY: dbus.MakeVariant(portal.mode),
 			}
 		}
 	}
