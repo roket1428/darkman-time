@@ -63,7 +63,7 @@ func ExecuteService() {
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
-		_, dbusCallback := NewDbusServer()
+		_, dbusCallback := NewDbusServer(service.ChangeMode)
 		service.AddListener(dbusCallback)
 	} else {
 		log.Println("Running without D-Bus server.")
