@@ -189,7 +189,7 @@ func (portal *PortalHandle) start() (err error) {
 
 func (portal *PortalHandle) Read(namespace string, key string) (dbus.Variant, *dbus.Error) {
 	if namespace != PORTAL_NAMESPACE || key != PORTAL_KEY {
-		return dbus.MakeVariant(nil), dbus.NewError("org.freedesktop.portal.Error.NotFound", nil)
+		return dbus.Variant{}, dbus.NewError("org.freedesktop.portal.Error.NotFound", nil)
 	}
 
 	return dbus.MakeVariant(portal.mode), nil
