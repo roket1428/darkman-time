@@ -25,7 +25,7 @@ Hint: `$XDG_DATA_DIRS` usually matches these, amongst others:
 
 Packages may also drop-in their own scripts into any of these locations,
 although application developers are encouraged to use the D-Bus API to
-determine the current mode and listen for changes (see below for mode details).
+determine the current mode and listen for changes (see below for details).
 
 ## Installation
 
