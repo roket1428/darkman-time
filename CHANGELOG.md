@@ -95,4 +95,9 @@ immediately.
   setting][xdp]. With this integration, applications using this portal will
   also be aligned by darkman's current mode and transitions.
 
+## 1.0.1
+
+- Minor bugfixes.
+- Example scripts have been moved into `examples/`.
+
 [xdp]: https://github.com/flatpak/xdg-desktop-portal/issues/629
