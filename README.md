@@ -14,8 +14,8 @@ At sunrise, it will look for scripts in `$XDG_DATA_DIRS/light-mode.d/`.
 
 These scripts individually configure different components and applications.
 
-Sample and reference scripts are included in this repository, and further
-contributions for specific tools or environments are welcome.
+Sample and reference scripts are included in the `examples` directory, and
+further contributions for specific applications or environments are welcome.
 
 Hint: `$XDG_DATA_DIRS` usually matches these, amongst others:
 
