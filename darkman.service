@@ -11,6 +11,12 @@ ExecStart=/usr/bin/darkman run
 Restart=on-failure
 TimeoutStopSec=15
 Slice=background.slice
+# Security hardening:
+LockPersonality=yes
+RestrictNamespaces=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service @timer
+MemoryDenyWriteExecute=yes
 
 [Install]
 WantedBy=graphical-session.target
