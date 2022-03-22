@@ -189,7 +189,8 @@ func (portal *PortalHandle) start() (err error) {
 
 func (portal *PortalHandle) Read(namespace string, key string) (dbus.Variant, *dbus.Error) {
 	if namespace != PORTAL_NAMESPACE || key != PORTAL_KEY {
-		return dbus.Variant{}, dbus.NewError("org.freedesktop.portal.Error.NotFound", nil)
+		log.Println("Got request for unknown setting:", namespace, key)
+		return dbus.Variant{}, dbus.NewError("org.freedesktop.portal.Error.NotFound", []interface{}{"Requested setting not found"})
 	}
 
 	return dbus.MakeVariant(portal.mode), nil
