@@ -3,7 +3,7 @@ PREFIX=/usr
 
 build:
 	go build -o darkman ./cmd
-	scdoc < darkman.1.scd > darkman.1
+	scdoc < man.md > darkman.1
 	./darkman completion zsh > _darkman.zsh
 	./darkman completion bash > darkman.bash
 
