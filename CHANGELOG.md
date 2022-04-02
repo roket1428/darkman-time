@@ -106,3 +106,6 @@ immediately.
 
 - The systemd service now has some extra hardening security rules. If you find
   any regression with your own scripts, please open an issue.
+- It is not possible to run darkman without a location and without automated
+  transitions (this may be useful when controlling it via a light sensor, or
+  manually). See the man page for details.
