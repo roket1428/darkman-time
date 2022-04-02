@@ -1,6 +1,7 @@
 package darkman
 
 import (
+	"fmt"
 	"log"
 	"time"
 
@@ -67,7 +68,7 @@ type Scheduler struct {
 }
 
 // The scheduler schedules timer to wake up in time for the next sundown/sunrise.
-func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode)) Scheduler {
+func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode), useGeoclue bool) error {
 	scheduler := Scheduler{
 		changeCallback: changeCallback,
 	}
@@ -80,12 +81,19 @@ func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode)) 
 		}
 	}()
 
-	err := GetLocations(initialLocation, scheduler.UpdateLocation)
-	if err != nil {
-		log.Println("Could not start location service:", err)
+	if useGeoclue {
+		err := GetLocations(initialLocation, scheduler.UpdateLocation)
+		if err != nil {
+			log.Println("Could not start location service:", err)
+		}
+	} else if initialLocation != nil {
+		log.Println("Not using geoclue; using static location.")
+		scheduler.UpdateLocation(*initialLocation)
+	} else {
+		return fmt.Errorf("no location source available")
 	}
 
-	return scheduler
+	return nil
 }
 
 func (handler *Scheduler) UpdateLocation(newLocation geoclue.Location) {

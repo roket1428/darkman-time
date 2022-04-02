@@ -77,9 +77,20 @@ func ExecuteService() {
 		log.Println("Running without XDG portal.")
 	}
 
-	// Start after registering all callbacks, so that the first changes
-	// are triggered after they're listening.
-	_ = NewScheduler(initialLocation, service.ChangeMode)
+	if initialLocation != nil || config.UseGeoclue {
+		// Start after registering all callbacks, so that the first changes
+		// are triggered after they're all listening.
+		err = NewScheduler(initialLocation, service.ChangeMode, config.UseGeoclue)
+		if err != nil {
+			log.Panicln("Failed to initialise the scheduler:", err)
+		}
+	} else {
+		log.Println("Not using geoclue and no known location.")
+		log.Println("No automatic transitions will be scheduled.")
+
+		// TODO: cache the last MODE, and use that instead.
+		service.ChangeMode(LIGHT)
+	}
 
 	// Sleep silently forever...
 	select {}
