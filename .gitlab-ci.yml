@@ -1,5 +1,5 @@
 lint:
-  image: golangci/golangci-lint:v1.41.1
+  image: golangci/golangci-lint:v1.45.2
   script:
     - golangci-lint run -v
 
