@@ -20,6 +20,26 @@ be set up once, and run in the background.
 For some sample scripts for common applications and environments, see
 https://gitlab.com/WhyNotHugo/darkman
 
+Darkman also implements the Freedesktop dark mode API. Applications using this
+API should switch to dark/light mode based on darkman's current preference.
+
+It is also possible disable manual transitions and control darkman manually.
+
+# COMMANDS
+
+*run*
+	Runs the darman service. This command is intended to be executed by a
+	service manager, init script or alike.
+
+*set* <light|dark>
+	Sets the current mode.
+
+*get*
+	Prints the current mode.
+
+*toggle*
+	Toggle the current mode.
+
 # LOCATION
 
 darkman will automatically determine your location using *geoclue*. If using
