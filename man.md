@@ -44,15 +44,15 @@ It is also possible disable manual transitions and control darkman manually.
 
 darkman will automatically determine your location using *geoclue*. If using
 geoclue is not an option, the location may be specific explicitly via a
-configuration file or a environment variables.
+configuration file.
 
 # CONFIGURATION
 
-darkman requires no configuration, but you may, optionally, provide your
-geolocation.
+darkman requires no configuration. A configuration file and all settings are
+optional.
 
-Configuration is read from _~/.config/darkman/config.yaml_, and takes the
-format of:
+Configuration is read from _~/.config/darkman/config.yaml_, and has the
+following format:
 
 ```
 lat: 52.3
@@ -60,11 +60,24 @@ lng: 4.8
 dbusserver: true
 ```
 
-You generally don't need more than one decimal point for your location. See
-https://xkcd.com/2170/ for details.
+The following settings are available:
 
-The `dbusserver` setting defines whether darkman should expose the current
-mode via its D-Bus API or not.
+- *lat*, *lng*: Latitude and longitude respectively. This value will be used at
+  start-up, but will later be superseded by whatever geoclue resolves (if
+  enabled). You generally don't need more than one decimal point for your
+  location, as describen in https://xkcd.com/2170/.
+
+- *dbusserver* (true/false): whether to expose the current mode via darkman's
+  own D-Bus API. The command line tool uses this API to apply changes, so it
+  will not work if this setting is disabled.
+
+- *portal* (true/false): whether to expose the current mode via the XDG settings
+  portal D-Bus API. Many desktop application will read the current mode via the
+  portal and respect what darkman is indicating.
+
+- *usegeoclue* (true/false): whether to use a local geoclue instance to
+  determine the current location. On some distributions/setups, this may
+  require setting up a geoclue agent to function properly.
 
 # ENVIRONMENT
 
