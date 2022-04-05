@@ -109,3 +109,9 @@ immediately.
 - It is now possible to run darkman without a location and without automated
   transitions (this may be useful when controlling it via a light sensor, or
   manually). See the man page for details.
+
+## 1.2.0
+
+- Fix a signal not being raised when changing the value via the
+  xdg-desktop-portal. This resulted in applications not immediately picking up
+  the change.

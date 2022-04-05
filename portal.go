@@ -49,7 +49,7 @@ func (portal *PortalHandle) changeMode(newMode Mode) {
 		"org.freedesktop.portal.Settings.SettingChanged",
 		PORTAL_NAMESPACE,
 		PORTAL_KEY,
-		portal.mode,
+		dbus.MakeVariant(portal.mode),
 	)
 	if err != nil {
 		log.Printf("couldn't emit signal: %v", err)
