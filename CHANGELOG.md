@@ -94,6 +94,7 @@ immediately.
 - Support integration with the `xdg-desktop-portal`' [dark style preference
   setting][xdp]. With this integration, applications using this portal will
   also be aligned by darkman's current mode and transitions.
+- Scripts are now run in sequence rather than in parallel.
 
 [xdp]: https://github.com/flatpak/xdg-desktop-portal/issues/629
 
