@@ -126,3 +126,5 @@ immediately.
   Because of this, querying the mode during start-up _may_ return `NULL`,
   whereas previously it would simply not respond until another mode was set or
   until the query timed out.
+- Darkman will now cache the last mode to disk. If location-based transitions
+  are disabled, this mode will be used at start-up.

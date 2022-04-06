@@ -5,7 +5,11 @@
 package darkman
 
 import (
+	"fmt"
 	"log"
+	"os"
+
+	"github.com/adrg/xdg"
 )
 
 type Mode string
@@ -39,6 +43,40 @@ func (service *Service) ChangeMode(mode Mode) {
 	}
 }
 
+func saveModeToCache(mode Mode) {
+	cacheFilePath, err := xdg.CacheFile("darkman/mode.txt")
+	if err != nil {
+		fmt.Println("Failed find location for mode cache file:", err)
+		return
+	}
+
+	err = os.WriteFile(cacheFilePath, []byte(mode), os.FileMode(0600))
+	if err != nil {
+		fmt.Println("Failed to save mode to cache:", err)
+		return
+	}
+}
+
+func readModeFromCache() (Mode, error) {
+	cacheFilePath, err := xdg.CacheFile("darkman/location.txt")
+	if err != nil {
+		return NULL, fmt.Errorf("error determining cache file path: %v", err)
+	}
+
+	data, err := os.ReadFile(cacheFilePath)
+	if err != nil {
+		return NULL, fmt.Errorf("error reading cache file path: %v", err)
+	}
+
+	var tmp interface{} = string(data[:])
+	if tmp == DARK || tmp == LIGHT {
+		return tmp.(Mode), nil
+	} else {
+		return NULL, nil
+
+	}
+}
+
 /// Run the darkman service.
 func ExecuteService() {
 	log.SetFlags(log.Lshortfile)
@@ -60,6 +98,7 @@ func ExecuteService() {
 		listeners:   &[]func(Mode){},
 	}
 	service.AddListener(RunScripts)
+	service.AddListener(saveModeToCache)
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
@@ -85,11 +124,15 @@ func ExecuteService() {
 			log.Panicln("Failed to initialise the scheduler:", err)
 		}
 	} else {
-		log.Println("Not using geoclue and no known location.")
+		log.Println("Not using geoclue and no configured location.")
 		log.Println("No automatic transitions will be scheduled.")
 
-		// TODO: cache the last MODE, and use that instead.
-		service.ChangeMode(LIGHT)
+		mode, err := readModeFromCache()
+		if err != nil {
+			log.Println("Couldn't load previous mode from cache:", err)
+			mode = NULL
+		}
+		service.ChangeMode(mode)
 	}
 
 	// Sleep silently forever...
