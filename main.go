@@ -130,9 +130,9 @@ func ExecuteService() {
 		mode, err := readModeFromCache()
 		if err != nil {
 			log.Println("Couldn't load previous mode from cache:", err)
-			mode = NULL
+		} else {
+			service.ChangeMode(mode)
 		}
-		service.ChangeMode(mode)
 	}
 
 	// Sleep silently forever...
