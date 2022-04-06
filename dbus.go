@@ -71,6 +71,10 @@ func NewDbusServer(onChange func(Mode)) (ServerHandle, func(Mode)) {
 		onChangeCallback: onChange,
 	}
 
+	if err := handle.start(); err != nil {
+		log.Printf("Could not start D-Bus server: %v", err)
+	}
+
 	return handle, handle.changeMode
 }
 

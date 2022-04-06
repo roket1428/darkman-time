@@ -63,6 +63,10 @@ func (portal *PortalHandle) changeMode(newMode Mode) {
 func NewPortal() (PortalHandle, func(Mode)) {
 	portal := PortalHandle{}
 
+	if err := portal.start(); err != nil {
+		log.Printf("Could not start D-Bus server: %v", err)
+	}
+
 	return portal, portal.changeMode
 }
 

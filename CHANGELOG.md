@@ -116,3 +116,13 @@ immediately.
 - Fix a signal not being raised when changing the value via the
   xdg-desktop-portal. This resulted in applications not immediately picking up
   the change.
+- The start-up sequence has changed slightly. Previously, darkman did not listen
+  on the D-Bus APIs until a mode had been set. This was problematic in
+  scenarios where geoclue does not work and no location ever resolved; because
+  no transition ever happened, darkman never listened on the D-Bus APIs, 
+  which implied that start-up had not been successful.
+  Darkman will now bind to the D-Bus APIs immediately on start-up, but only emit
+  a change even an actual transition happens.
+  Because of this, querying the mode during start-up _may_ return `NULL`,
+  whereas previously it would simply not respond until another mode was set or
+  until the query timed out.
