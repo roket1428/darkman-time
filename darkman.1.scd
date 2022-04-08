@@ -17,16 +17,8 @@ darkman - a framework for dark-mode and light-mode transitions on Linux desktop
 again at sunrise. darkman is not designed to be used interactively: it's designed to
 be set up once, and run in the background.
 
-- At sundown, it will look for scripts in _$XDG_DATA_DIRS/dark-mode.d/_.
-- At sunrise, it will look for scripts in _$XDG_DATA_DIRS/light-mode.d/_.
-
-For some sample scripts for common applications and environments, see
-https://gitlab.com/WhyNotHugo/darkman
-
-Darkman also implements the Freedesktop dark mode API. Applications using this
-API should switch to dark/light mode based on darkman's current preference.
-
-It is also possible disable manual transitions and control darkman manually.
+It is, however, possible trigger manual transitions and even disable automatic
+transitions entirely.
 
 # COMMANDS
 
@@ -43,19 +35,54 @@ It is also possible disable manual transitions and control darkman manually.
 *toggle*
 	Toggle the current mode.
 
+# INTEGRATIONS
+
+The Linux desktop ecosystem is quite heterogeneous and switching between
+dark/light mode on different applications requires different mechanism and
+techniques.
+
+Darkman seeks to implement the more widely supported standards, while leaving
+room for users to hook in custom scripts for other applications.
+
+Darkman implements the Freedesktop dark mode standard. Applications using this
+API should switch to dark/light mode based on darkman's current preference. This
+standard was originally pushed by the GNOME and Elementary teams, and is
+currently supported by KDE, Firefox and many other projects. You should expect
+applications from those environment to support it, amongst others.
+
+For additional application support, custom scripts can be places in the
+following two directories:
+
+- _$XDG_DATA_DIRS/dark-mode.d/_: Scripts to run when switching to dark mode.
+- _$XDG_DATA_DIRS/light-mode.d/_: Scripts to run when switching to light mode.
+
+;This is the recommended approach for simpler tools like mako(1), zathura(1), etc.
+
+Scripts need to have an executable bit set, or will not be executed.
+
+For additional sample scripts (and discussion on how to integrate different
+applications) see the project website:
+
+	https://gitlab.com/WhyNotHugo/darkman
+
+For custom integrations, darkman exposes a D-Bus API which allows querying and
+controlling the current mode. The *get*, *set* and *toggle* commands all use
+this API. Use this API is also the recommended approach when writing custom
+tools (e.g.: switching the current mode based on the input from a light sensor).
+
 # LOCATION
 
-darkman will automatically determine your location using *geoclue*. If using
-geoclue is not an option, the location may be specific explicitly via a
-configuration file.
+darkman will automatically determine your location using *geoclue*. Geoclue's
+reliability varies depending on distribution and desktop environment, and it
+will often not work without a geoclue agent running.
+
+If using geoclue is not an option, the location may be specified explicitly via
+a configuration file.
 
 # CONFIGURATION
 
-darkman requires no configuration. A configuration file and all settings are
-optional.
-
-Configuration is read from *~/.config/darkman/config.yaml*, and has the
-following format:
+A configuration file and all settings are optional. Configuration is read from
+*~/.config/darkman/config.yaml*, and has the following format:
 
 ```
 lat: 52.3
@@ -70,15 +97,15 @@ The following settings are available:
   enabled). You generally don't need more than one decimal point for your
   location, as described in https://xkcd.com/2170/.
 
-- *dbusserver* (true/false): whether to expose the current mode via darkman's
+- *dbusserver* (true/false): Whether to expose the current mode via darkman's
   own D-Bus API. The command line tool uses this API to apply changes, so it
   will not work if this setting is disabled.
 
-- *portal* (true/false): whether to expose the current mode via the XDG settings
+- *portal* (true/false): Whether to expose the current mode via the XDG settings
   portal D-Bus API. Many desktop application will read the current mode via the
   portal and respect what darkman is indicating.
 
-- *usegeoclue* (true/false): whether to use a local geoclue instance to
+- *usegeoclue* (true/false): Whether to use a local geoclue instance to
   determine the current location. On some distributions/setups, this may
   require setting up a geoclue agent to function properly.
 
@@ -96,6 +123,12 @@ _DARKMAN_LNG_
 _DARKMAN_DBUSSERVER_
 	Overrides whether to expose the current mode via D-Bus.
 
-# LICENCE
+# AUTHORS
 
-darkman is licensed under the ISC licence. See LICENCE for details.
+Developed by Hugo O. Barrera <hugo@whynothugo.nl>, with invaluable contributions
+from the community.
+
+darkman is an open source project licensed under the ISC licence and developed
+for anyone to use freely. If you would like to sponsor this project, see:
+
+	https://liberapay.com/WhyNotHugo/
