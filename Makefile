@@ -1,9 +1,11 @@
 DESTDIR?=/
 PREFIX=/usr
 
-build:
+darkman.1:
+	scdoc < darkman.1.scd > darkman.1
+
+build: darkman.1
 	go build -o darkman ./cmd
-	scdoc < man.md > darkman.1
 	./darkman completion zsh > _darkman.zsh
 	./darkman completion bash > darkman.bash
 
