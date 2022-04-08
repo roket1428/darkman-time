@@ -13,9 +13,15 @@ body {
   width: 100%;
   color: #999;
 }
+
+.foot {
+  margin-top: 3ex;
+}
+
 .head-vol {
   text-align: center;
 }
+
 .head-rtitle {
   text-align: right;
 }
