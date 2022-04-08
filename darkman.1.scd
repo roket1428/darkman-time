@@ -6,7 +6,10 @@ darkman - a framework for dark-mode and light-mode transitions on Linux desktop
 
 # SYNOPSIS
 
-darkman
+darkman _run_++
+darkman _set_ [_light_|_dark_]++
+darkman _get_++
+darkman _toggle_
 
 # DESCRIPTION
 
