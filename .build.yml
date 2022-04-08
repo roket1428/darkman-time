@@ -1,0 +1,20 @@
+image: alpine/edge
+oauth: pages.sr.ht/PAGES:RW
+packages:
+  - mandoc
+  - scdoc
+  - hut
+sources:
+  - https://git.sr.ht/~whynothugo/darkman
+tasks:
+  - man: |
+      cd darkman
+      make darkman.1
+      mandoc -T html -O style=man-style.css < darkman.1 > index.html
+  - package: |
+      mkdir public
+      mv darkman/index.html darkman/man-style.css public/
+      cd public
+      tar -cvz . > ../site.tar.gz
+  - publish: |
+      hut pages publish -d darkman.whynothugo.nl site.tar.gz

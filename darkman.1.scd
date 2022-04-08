@@ -6,10 +6,10 @@ darkman - a framework for dark-mode and light-mode transitions on Linux desktop
 
 # SYNOPSIS
 
-darkman _run_++
-darkman _set_ [_light_|_dark_]++
-darkman _get_++
-darkman _toggle_
+*darkman* _run_++
+*darkman* _set_ [_light_|_dark_]++
+*darkman* _get_++
+*darkman* _toggle_
 
 # DESCRIPTION
 
@@ -54,7 +54,7 @@ configuration file.
 darkman requires no configuration. A configuration file and all settings are
 optional.
 
-Configuration is read from _~/.config/darkman/config.yaml_, and has the
+Configuration is read from *~/.config/darkman/config.yaml*, and has the
 following format:
 
 ```
