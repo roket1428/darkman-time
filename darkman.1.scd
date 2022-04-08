@@ -68,7 +68,7 @@ The following settings are available:
 - *lat*, *lng*: Latitude and longitude respectively. This value will be used at
   start-up, but will later be superseded by whatever geoclue resolves (if
   enabled). You generally don't need more than one decimal point for your
-  location, as describen in https://xkcd.com/2170/.
+  location, as described in https://xkcd.com/2170/.
 
 - *dbusserver* (true/false): whether to expose the current mode via darkman's
   own D-Bus API. The command line tool uses this API to apply changes, so it
