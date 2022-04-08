@@ -56,7 +56,7 @@ following two directories:
 - _$XDG_DATA_DIRS/dark-mode.d/_: Scripts to run when switching to dark mode.
 - _$XDG_DATA_DIRS/light-mode.d/_: Scripts to run when switching to light mode.
 
-;This is the recommended approach for simpler tools like mako(1), zathura(1), etc.
+; This is the recommended approach for simpler tools like mako(1), zathura(1), etc.
 
 Scripts need to have an executable bit set, or will not be executed.
 
