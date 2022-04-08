@@ -7,14 +7,9 @@ packages:
 sources:
   - https://git.sr.ht/~whynothugo/darkman
 tasks:
-  - man: |
+  - site: |
       cd darkman
-      make darkman.1
-      mandoc -T html -O style=man-style.css < darkman.1 > index.html
-  - package: |
-      mkdir public
-      mv darkman/index.html darkman/man-style.css public/
-      cd public
-      tar -cvz . > ../site.tar.gz
+      make site.tar.gz
   - publish: |
+      cd darkman
       hut pages publish -d darkman.whynothugo.nl site.tar.gz
