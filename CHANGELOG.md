@@ -122,7 +122,7 @@ immediately.
   no transition ever happened, darkman never listened on the D-Bus APIs, 
   which implied that start-up had not been successful.
   Darkman will now bind to the D-Bus APIs immediately on start-up, but only emit
-  a change even an actual transition happens.
+  a change when an actual transition happens.
   Because of this, querying the mode during start-up _may_ return `NULL`,
   whereas previously it would simply not respond until another mode was set or
   until the query timed out.
