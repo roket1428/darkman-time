@@ -116,6 +116,9 @@ immediately.
 - Fix a signal not being raised when changing the value via the
   xdg-desktop-portal. This resulted in applications not immediately picking up
   the change.
+
+## 1.3.0
+
 - The start-up sequence has changed slightly. Previously, darkman did not listen
   on the D-Bus APIs until a mode had been set. This was problematic in
   scenarios where geoclue does not work and no location ever resolved; because
@@ -126,5 +129,7 @@ immediately.
   Because of this, querying the mode during start-up _may_ return `NULL`,
   whereas previously it would simply not respond until another mode was set or
   until the query timed out.
+- Disabling automatic transitions is now supported.
 - Darkman will now cache the last mode to disk. If location-based transitions
   are disabled, this mode will be used at start-up.
+- The documentation is now also available at https://darkman.whynothugo.nl/
