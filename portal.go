@@ -46,7 +46,7 @@ func (portal *PortalHandle) changeMode(newMode Mode) {
 	portal.mode = modeToPortalValue(newMode)
 	err := portal.conn.Emit(
 		PORTAL_OBJ_PATH,
-		"org.freedesktop.portal.Settings.SettingChanged",
+		"org.freedesktop.impl.portal.Settings.SettingChanged",
 		PORTAL_NAMESPACE,
 		PORTAL_KEY,
 		dbus.MakeVariant(portal.mode),

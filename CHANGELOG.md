@@ -133,3 +133,10 @@ immediately.
 - Darkman will now cache the last mode to disk. If location-based transitions
   are disabled, this mode will be used at start-up.
 - The documentation is now also available at https://darkman.whynothugo.nl/
+
+## 1.3.1
+
+- Fix how the signal for the XDG portal is raised. Previously it was raised
+  directly, which would would only be picked up by specific unsandboxed
+  applications, but not most of them (mostly since `darkman` raised the signal
+  itself rather than via the desktop portal).
