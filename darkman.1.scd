@@ -2,7 +2,7 @@ darkman(1)
 
 # NAME
 
-darkman - a framework for dark-mode and light-mode transitions on Linux desktop
+darkman - daemon for dark-mode and light-mode transitions on Linux desktop
 
 # SYNOPSIS
 
