@@ -46,7 +46,7 @@ func (portal *PortalHandle) changeMode(newMode Mode) {
 	portal.mode = modeToPortalValue(newMode)
 	err := portal.conn.Emit(
 		PORTAL_OBJ_PATH,
-		"org.freedesktop.impl.portal.Settings.SettingChanged",
+		PORTAL_INTERFACE+".SettingChanged",
 		PORTAL_NAMESPACE,
 		PORTAL_KEY,
 		dbus.MakeVariant(portal.mode),
@@ -78,7 +78,7 @@ func (portal *PortalHandle) start() (err error) {
 
 	// Define the "Version" prop (its value will be static).
 	propsSpec := map[string]map[string]*prop.Prop{
-		"org.freedesktop.impl.portal.Settings": {
+		PORTAL_INTERFACE: {
 			"Version": {
 				Value:    uint(1),
 				Writable: false,
