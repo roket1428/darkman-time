@@ -1,6 +1,6 @@
-darkman
-darkman.1
-darkmanctl
-_darkman.zsh
-darkman.bash
-contrib/aur/*.log
+/darkman
+/darkman.1
+/darkmanctl
+/_darkman.zsh
+/darkman.bash
+/contrib/aur/*.log
