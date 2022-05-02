@@ -11,7 +11,7 @@ site.tar.gz: index.html
 	tar -cvz index.html man-style.css > site.tar.gz
 
 darkman:
-	go build -o darkman ./cmd
+	go build ./cmd/darkman
 
 .PHONY: build
 build: darkman darkman.1
