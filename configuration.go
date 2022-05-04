@@ -12,7 +12,7 @@ import (
 type Config struct {
 	Lat        *float64
 	Lng        *float64
-	UseGeoclue bool // TODO: Not yet implemented
+	UseGeoclue bool
 	DBusServer bool
 	Portal     bool
 }
