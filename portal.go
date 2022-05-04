@@ -60,8 +60,8 @@ func (portal *PortalHandle) changeMode(newMode Mode) {
 ///
 /// Returns a callback function which should be called each time the current
 /// mode changes.
-func NewPortal() (PortalHandle, func(Mode)) {
-	portal := PortalHandle{}
+func NewPortal(initial Mode) (PortalHandle, func(Mode)) {
+	portal := PortalHandle{mode: modeToPortalValue(initial)}
 
 	if err := portal.start(); err != nil {
 		log.Printf("Could not start D-Bus server: %v", err)

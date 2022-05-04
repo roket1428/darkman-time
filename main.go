@@ -93,8 +93,16 @@ func ExecuteService() {
 		log.Println("Found location in config:", initialLocation)
 	}
 
+	initialMode, err := readModeFromCache()
+	if err != nil {
+		log.Println("Couldn't load previous mode from cache:", err)
+		initialMode = NULL
+	} else {
+		log.Println("Applying last know mode")
+	}
+
 	service := Service{
-		currentMode: NULL,
+		currentMode: initialMode,
 		listeners:   &[]func(Mode){},
 	}
 	service.AddListener(RunScripts)
@@ -102,7 +110,7 @@ func ExecuteService() {
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
-		_, dbusCallback := NewDbusServer(service.ChangeMode)
+		_, dbusCallback := NewDbusServer(initialMode, service.ChangeMode)
 		service.AddListener(dbusCallback)
 	} else {
 		log.Println("Running without D-Bus server.")
@@ -110,7 +118,7 @@ func ExecuteService() {
 
 	if config.Portal {
 		log.Println("Running with XDG portal.")
-		_, portalCallback := NewPortal()
+		_, portalCallback := NewPortal(initialMode)
 		service.AddListener(portalCallback)
 	} else {
 		log.Println("Running without XDG portal.")
@@ -126,13 +134,6 @@ func ExecuteService() {
 	} else {
 		log.Println("Not using geoclue and no configured location.")
 		log.Println("No automatic transitions will be scheduled.")
-
-		mode, err := readModeFromCache()
-		if err != nil {
-			log.Println("Couldn't load previous mode from cache:", err)
-		} else {
-			service.ChangeMode(mode)
-		}
 	}
 
 	// Sleep silently forever...
