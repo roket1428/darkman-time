@@ -87,18 +87,9 @@ func initGeoclue(onLocation func(geoclue.Location)) (client *geoclue.Geoclient, 
 
 // Periodically fetch the current location.
 //
-// When initialised, it'll yield an initial location, or fall back to a cached
-// one if none is passed.
-//
-// It'll then initialise geoclue, and yield locations that it sends.
-// My default, we indicate set geoclue in a rather passive mode; it'll ignore
+// By default, we indicate set geoclue in a rather passive mode; it'll ignore
 // location changes that occurr in less than four hours, or of less than 40km.
-func GetLocations(initial *geoclue.Location, onLocation func(geoclue.Location)) (err error) {
-	// TODO: Should take a context to kill the client.
-	if initial != nil {
-		onLocation(*initial)
-	}
-
+func GetLocations(onLocation func(geoclue.Location)) (err error) {
 	_, err = initGeoclue(onLocation)
 	if err != nil {
 		return fmt.Errorf("error initialising geoclue: %v", err)

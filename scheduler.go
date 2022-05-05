@@ -82,7 +82,7 @@ func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode), 
 	}()
 
 	if useGeoclue {
-		err := GetLocations(initialLocation, scheduler.UpdateLocation)
+		err := GetLocations(scheduler.UpdateLocation)
 		if err != nil {
 			log.Println("Could not start location service:", err)
 		}

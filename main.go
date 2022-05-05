@@ -28,6 +28,7 @@ const (
 /// Add a callback to be run each time the current mode changes.
 func (service *Service) AddListener(listener func(Mode)) {
 	*service.listeners = append(*service.listeners, listener)
+	listener(service.currentMode) // Apply once with the initial mode.
 }
 
 /// Change the current mode (and run all callbacks).
