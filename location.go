@@ -95,13 +95,6 @@ func initGeoclue(onLocation func(geoclue.Location)) (client *geoclue.Geoclient, 
 // location changes that occurr in less than four hours, or of less than 40km.
 func GetLocations(initial *geoclue.Location, onLocation func(geoclue.Location)) (err error) {
 	// TODO: Should take a context to kill the client.
-	if initial == nil {
-		initial = readLocationFromCache()
-		if initial != nil {
-			log.Println("Read location from cache:", initial)
-		}
-	}
-
 	if initial != nil {
 		onLocation(*initial)
 	}

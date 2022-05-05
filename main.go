@@ -10,6 +10,7 @@ import (
 	"os"
 
 	"github.com/adrg/xdg"
+	"gitlab.com/WhyNotHugo/darkman/geoclue"
 )
 
 type Mode string
@@ -77,6 +78,30 @@ func readModeFromCache() (Mode, error) {
 	}
 }
 
+// Gets the initial mode.
+// If the location is known, the mode is computed for that location. Unless the
+// device has travelled across timezones, it should be the correct setting.
+// Otherwise, load the last-known mode. This work well for manually controlled
+// devices, which are unlikely to have a "last known location".
+func GetInitialMode(location *geoclue.Location) Mode {
+	if location != nil {
+		mode, err := DetermineModeForRightNow(*location)
+		if err != nil {
+			log.Println("Couldn't load previous mode from cache:", err)
+			return NULL
+		}
+		return *mode
+	} else {
+		mode, err := readModeFromCache()
+		if err != nil {
+			log.Println("Couldn't load previous mode from cache:", err)
+			return NULL
+		}
+		return mode
+	}
+
+}
+
 /// Run the darkman service.
 func ExecuteService() {
 	log.SetFlags(log.Lshortfile)
@@ -86,20 +111,19 @@ func ExecuteService() {
 		log.Println("Could not read configuration file:", err)
 	}
 
-	initialLocation, err := config.GetLocation()
-	if err != nil {
-		log.Println("No location found via config.")
+	initialLocation := readLocationFromCache()
+	if initialLocation != nil {
+		log.Println("Read location from cache:", initialLocation)
 	} else {
-		log.Println("Found location in config:", initialLocation)
+		initialLocation, err = config.GetLocation()
+		if err != nil {
+			log.Println("No location found via config.")
+		} else {
+			log.Println("Found location in config:", initialLocation)
+		}
 	}
 
-	initialMode, err := readModeFromCache()
-	if err != nil {
-		log.Println("Couldn't load previous mode from cache:", err)
-		initialMode = NULL
-	} else {
-		log.Println("Applying last know mode")
-	}
+	initialMode := GetInitialMode(initialLocation)
 
 	service := Service{
 		currentMode: initialMode,
