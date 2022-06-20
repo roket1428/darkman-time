@@ -107,7 +107,8 @@ The following settings are available:
 
 - *usegeoclue* (*true*/false): Whether to use a local geoclue instance to
   determine the current location. On some distributions/setups, this may
-  require setting up a geoclue agent to function properly.
+  require setting up a geoclue agent to function properly. The default for this
+  will change to *false* in v2.0.
 
 # ENVIRONMENT
 
