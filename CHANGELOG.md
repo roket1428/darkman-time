@@ -140,3 +140,7 @@ immediately.
   directly, which would would only be picked up by specific unsandboxed
   applications, but not most of them (mostly since `darkman` raised the signal
   itself rather than via the desktop portal).
+
+## 1.3.2
+
+- The man page now indicates the default value for each config setting.
