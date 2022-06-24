@@ -33,6 +33,10 @@ determine the current mode and listen for changes (see below for details).
 
     paru -S darkman
 
+### Fedora
+
+    dnf install darkman
+
 ### Others
 
     git clone git@gitlab.com:WhyNotHugo/darkman.git
