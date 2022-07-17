@@ -124,6 +124,13 @@ _DARKMAN_LNG_
 _DARKMAN_DBUSSERVER_
 	Overrides whether to expose the current mode via D-Bus.
 
+# PRIVACY
+
+Darkman will trigger a darkmode/lightmode transition at sundown in the current
+location. When a web browser applies this transition at the same time, open
+websites can use this information to extrapolate some information about the
+current location.
+
 # AUTHORS
 
 Developed by Hugo O. Barrera <hugo@whynothugo.nl>, with invaluable contributions
