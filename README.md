@@ -39,6 +39,10 @@ determine the current mode and listen for changes (see below for details).
 
 ### Others
 
+You'll need `scdoc` and `go` installed to build from source. There are
+typically both available in distribution repositories (e.g.: `apt-get
+install...`).
+
     git clone git@gitlab.com:WhyNotHugo/darkman.git
     cd darkman
     make
