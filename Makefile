@@ -13,13 +13,20 @@ site.tar.gz: index.html
 darkman:
 	go build ./cmd/darkman
 
-.PHONY: build
-build: darkman darkman.1
+_darkman.zsh: darkman darkman.1
 	./darkman completion zsh > _darkman.zsh
+
+darkman.bash: darkman darkman.1
 	./darkman completion bash > darkman.bash
 
+.PHONY: completion
+completion: _darkman.zsh darkman.bash
+
+.PHONY: build
+build: darkman darkman.1 completion
+
 .PHONY: install
-install:
+install: build
 	@install -Dm755 darkman 	${DESTDIR}${PREFIX}/bin/darkman
 	@ln -s darkman                   ${DESTDIR}${PREFIX}/bin/darkmanctl
 	@install -Dm644 darkman.service	${DESTDIR}${PREFIX}/lib/systemd/user/darkman.service
