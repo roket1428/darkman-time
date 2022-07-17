@@ -72,9 +72,9 @@ tools (e.g.: switching the current mode based on the input from a light sensor).
 
 # LOCATION
 
-darkman will automatically determine your location using *geoclue*. Geoclue's
-reliability varies depending on distribution and desktop environment, and it
-will often not work without a geoclue agent running.
+darkman will automatically determine the system's location using *geoclue*.
+Geoclue's reliability varies depending on distribution and desktop environment,
+and it will often not work without a geoclue agent running.
 
 If using geoclue is not an option, the location may be specified explicitly via
 a configuration file.
@@ -94,8 +94,8 @@ The following settings are available:
 
 - *lat*, *lng*: Latitude and longitude respectively. This value will be used at
   start-up, but will later be superseded by whatever geoclue resolves (if
-  enabled). You generally don't need more than one decimal point for your
-  location, as described in https://xkcd.com/2170/.
+  enabled). More than one decimal point is generally not needed, as described
+  in https://xkcd.com/2170/.
 
 - *dbusserver* (*true*/false): Whether to expose the current mode via darkman's
   own D-Bus API. The command line tool uses this API to apply changes, so it
