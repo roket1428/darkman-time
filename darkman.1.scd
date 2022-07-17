@@ -131,6 +131,13 @@ location. When a web browser applies this transition at the same time, open
 websites can use this information to extrapolate some information about the
 current location.
 
+# DEVELOPMENT
+
+For issues and general development inquiries, see the project home currently
+hosted at GitLab:
+
+	https://gitlab.com/WhyNotHugo/darkman
+
 # AUTHORS
 
 Developed by Hugo O. Barrera <hugo@whynothugo.nl>, with invaluable contributions
