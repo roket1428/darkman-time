@@ -29,8 +29,7 @@ var rootCmd = &cobra.Command{
 			// TODO Drop before v1.0.0
 			fmt.Println("Running `darkman` without arguments is deprecated. Use `darkman run` instead")
 
-			darkman.ExecuteService()
-			return nil
+			return darkman.ExecuteService()
 		} else {
 			return cmd.Usage()
 		}
@@ -82,8 +81,11 @@ var runCmd = &cobra.Command{
 be used by a service manager, by a  session init script or alike.
 
 The service will run in foreground.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		darkman.ExecuteService()
+	RunE: func(cmd *cobra.Command, args []string) error {
+		// Avoid showing usage if service fails to start.
+		// See: https://github.com/spf13/cobra/issues/340#issuecomment-374617413
+		cmd.SilenceUsage = true
+		return darkman.ExecuteService()
 	},
 }
 

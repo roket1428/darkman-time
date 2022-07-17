@@ -144,3 +144,8 @@ immediately.
 ## 1.3.2
 
 - The man page now indicates the default value for each config setting.
+
+## 1.4.0
+
+- When failing to register a D-Bus service (e.g.: because it is already taken),
+  darkman will not exit immediately, rather than simply log the error.

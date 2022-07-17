@@ -104,7 +104,7 @@ func GetInitialMode(location *geoclue.Location) Mode {
 }
 
 /// Run the darkman service.
-func ExecuteService() {
+func ExecuteService() error {
 	log.SetFlags(log.Lshortfile)
 
 	config, err := ReadConfig()
@@ -135,7 +135,10 @@ func ExecuteService() {
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
-		_, dbusCallback := NewDbusServer(initialMode, service.ChangeMode)
+		_, dbusCallback, err := NewDbusServer(initialMode, service.ChangeMode)
+		if err != nil {
+			return err
+		}
 		service.AddListener(dbusCallback)
 	} else {
 		log.Println("Running without D-Bus server.")
@@ -143,7 +146,10 @@ func ExecuteService() {
 
 	if config.Portal {
 		log.Println("Running with XDG portal.")
-		_, portalCallback := NewPortal(initialMode)
+		_, portalCallback, err := NewPortal(initialMode)
+		if err != nil {
+			return err
+		}
 		service.AddListener(portalCallback)
 	} else {
 		log.Println("Running without XDG portal.")
@@ -154,7 +160,7 @@ func ExecuteService() {
 		// are triggered after they're all listening.
 		err = NewScheduler(initialLocation, service.ChangeMode, config.UseGeoclue)
 		if err != nil {
-			log.Panicln("Failed to initialise the scheduler:", err)
+			return fmt.Errorf("failed to initialise service scheduler: %v", err)
 		}
 	} else {
 		log.Println("Not using geoclue and no configured location.")

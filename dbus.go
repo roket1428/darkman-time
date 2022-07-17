@@ -65,7 +65,7 @@ func (handle *ServerHandle) Close() error {
 ///
 /// Returns a callback function which should be called each time the current
 /// mode changes by some other mechanism.
-func NewDbusServer(initial Mode, onChange func(Mode)) (ServerHandle, func(Mode)) {
+func NewDbusServer(initial Mode, onChange func(Mode)) (*ServerHandle, func(Mode), error) {
 	handle := ServerHandle{
 		c:                make(chan Mode),
 		onChangeCallback: onChange,
@@ -73,10 +73,10 @@ func NewDbusServer(initial Mode, onChange func(Mode)) (ServerHandle, func(Mode))
 	}
 
 	if err := handle.start(); err != nil {
-		log.Printf("Could not start D-Bus server: %v", err)
+		return nil, nil, fmt.Errorf("Could not start D-Bus server: %v", err)
 	}
 
-	return handle, handle.changeMode
+	return &handle, handle.changeMode, nil
 }
 
 func (handle *ServerHandle) start() (err error) {
