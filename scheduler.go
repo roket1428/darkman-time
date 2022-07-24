@@ -116,7 +116,7 @@ func (handler *Scheduler) Tick() {
 		return
 	}
 
-	now := time.Now().UTC()
+	now := time.Now()
 
 	// Add one minute here to compensate for rounding.
 	//
@@ -139,7 +139,7 @@ func (handler *Scheduler) Tick() {
 }
 
 func DetermineModeForRightNow(location geoclue.Location) (*Mode, error) {
-	now := time.Now().UTC()
+	now := time.Now()
 	sunrise, sundown, err := NextSunriseAndSundown(location, now.Add(time.Minute))
 	if err != nil {
 		return nil, fmt.Errorf("error calculating next sundown/sunrise: %v", err)
