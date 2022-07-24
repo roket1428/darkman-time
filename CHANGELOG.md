@@ -141,11 +141,8 @@ immediately.
   applications, but not most of them (mostly since `darkman` raised the signal
   itself rather than via the desktop portal).
 
-## 1.3.2
-
-- The man page now indicates the default value for each config setting.
-
 ## 1.4.0
 
+- The man page now indicates the default value for each config setting.
 - When failing to register a D-Bus service (e.g.: because it is already taken),
   darkman will not exit immediately, rather than simply log the error.
