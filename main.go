@@ -25,6 +25,14 @@ const (
 	DARK  Mode = "dark"
 )
 
+/// Creates a new Service instance.
+func NewService(initialMode Mode) Service {
+	return Service{
+		currentMode: initialMode,
+		listeners:   &[]func(Mode){},
+	}
+}
+
 /// Add a callback to be run each time the current mode changes.
 func (service *Service) AddListener(listener func(Mode)) {
 	*service.listeners = append(*service.listeners, listener)
@@ -126,10 +134,7 @@ func ExecuteService() error {
 
 	initialMode := GetInitialMode(initialLocation)
 
-	service := Service{
-		currentMode: initialMode,
-		listeners:   &[]func(Mode){},
-	}
+	service := NewService(initialMode)
 	service.AddListener(RunScripts)
 	service.AddListener(saveModeToCache)
 
