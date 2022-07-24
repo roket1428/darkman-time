@@ -17,13 +17,13 @@ darkman - daemon for dark-mode and light-mode transitions on Linux desktop
 again at sunrise. darkman is not designed to be used interactively: it's designed to
 be set up once, and run in the background.
 
-It is, however, possible trigger manual transitions and even disable automatic
-transitions entirely.
+It is, however, possible to trigger manual transitions and even disable
+automatic transitions entirely.
 
 # COMMANDS
 
 *run*
-	Runs the darman service. This command is intended to be executed by a
+	Runs the darkman service. This command is intended to be executed by a
 	service manager, init script or alike.
 
 *set* <light|dark>
@@ -44,14 +44,14 @@ techniques.
 Darkman seeks to implement the more widely supported standards, while leaving
 room for users to hook in custom scripts for other applications.
 
-Darkman implements the Freedesktop dark mode standard. Applications using this
+Darkman implements the FreeDesktop dark mode standard. Applications using this
 API should switch to dark/light mode based on darkman's current preference. This
 standard was originally pushed by the GNOME and Elementary teams, and is
 currently supported by KDE, Firefox and many other projects. You should expect
 applications from those environment to support it, amongst others.
 
-For additional application support, custom scripts can be places in the
-following two directories:
+For additional application support, custom executables (including simple
+shell scripts) can be placed in the following two directories:
 
 - _$XDG_DATA_DIRS/dark-mode.d/_: Scripts to run when switching to dark mode.
 - _$XDG_DATA_DIRS/light-mode.d/_: Scripts to run when switching to light mode.
@@ -67,7 +67,7 @@ applications) see the project website:
 
 For custom integrations, darkman exposes a D-Bus API which allows querying and
 controlling the current mode. The *get*, *set* and *toggle* commands all use
-this API. Use this API is also the recommended approach when writing custom
+this API. Usage of this API is also the recommended approach when writing custom
 tools (e.g.: switching the current mode based on the input from a light sensor).
 
 # LOCATION
