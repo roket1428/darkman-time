@@ -13,7 +13,7 @@ darkman - daemon for dark-mode and light-mode transitions on Linux desktop
 
 # DESCRIPTION
 
-*darkman* runs in the background and turns on night mode at sundown, and turns it off
+*darkman* runs in the background and turns on dark mode at sundown, and turns it off
 again at sunrise. darkman is not designed to be used interactively: it's designed to
 be set up once, and run in the background.
 
