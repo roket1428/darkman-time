@@ -104,7 +104,7 @@ details.
 
 ## Development
 
-`darkman` works well and actively maintained.
+`darkman` works well and is actively maintained.
 
 For bug and suggestions, see [Issues][issues] on GitLab. Ongoing research is
 also gathered into these issues.
