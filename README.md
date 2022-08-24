@@ -84,7 +84,8 @@ It is possible to manually query or change the current mode using the
 
 ## Configuration
 
-See [the man page](darkman.1.scd) (`man darkman`) for configuration details.
+See [the man page](https://darkman.whynothugo.nl) (`man darkman`) for
+configuration details.
 
 ## D-Bus service
 
