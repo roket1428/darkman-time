@@ -138,6 +138,10 @@ hosted at GitLab:
 
 	https://gitlab.com/WhyNotHugo/darkman
 
+# SEE ALSO
+
+gammastep(1)
+
 # AUTHORS
 
 Developed by Hugo O. Barrera <hugo@whynothugo.nl>, with invaluable contributions
