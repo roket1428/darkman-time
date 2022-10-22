@@ -19,4 +19,4 @@ SystemCallFilter=@system-service @timer
 MemoryDenyWriteExecute=yes
 
 [Install]
-WantedBy=graphical-session.target
+WantedBy=default.target
