@@ -1,8 +1,6 @@
 [Unit]
 Description=Framework for dark-mode and light-mode transitions.
 Documentation=man:darkman(1)
-PartOf=graphical-session.target
-BindsTo=graphical-session.target
 
 [Service]
 Type=dbus
