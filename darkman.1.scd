@@ -150,4 +150,4 @@ from the community.
 darkman is an open source project licensed under the ISC licence and developed
 for anyone to use freely. If you would like to sponsor this project, see:
 
-	https://liberapay.com/WhyNotHugo/
+	https://whynothugo.nl/sponsor
