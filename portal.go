@@ -64,7 +64,7 @@ func NewPortal(initial Mode) (*PortalHandle, func(Mode), error) {
 	portal := PortalHandle{mode: modeToPortalValue(initial)}
 
 	if err := portal.start(); err != nil {
-		return nil, nil, fmt.Errorf("Could not start D-Bus server: %v", err)
+		return nil, nil, fmt.Errorf("could not start D-Bus server: %v", err)
 	}
 
 	return &portal, portal.changeMode, nil

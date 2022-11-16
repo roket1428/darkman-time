@@ -29,7 +29,7 @@ func (handle *ServerHandle) emitChangeSignal() {
 func (handle *ServerHandle) changeMode(newMode Mode) {
 	if handle.conn == nil {
 		if err := handle.start(); err != nil {
-			log.Printf("Could not start D-Bus server: %v", err)
+			log.Printf("could not start D-Bus server: %v", err)
 			return
 		}
 	}
@@ -73,7 +73,7 @@ func NewDbusServer(initial Mode, onChange func(Mode)) (*ServerHandle, func(Mode)
 	}
 
 	if err := handle.start(); err != nil {
-		return nil, nil, fmt.Errorf("Could not start D-Bus server: %v", err)
+		return nil, nil, fmt.Errorf("could not start D-Bus server: %v", err)
 	}
 
 	return &handle, handle.changeMode, nil
