@@ -9,6 +9,8 @@ import (
 	"gitlab.com/WhyNotHugo/darkman/libdarkman"
 )
 
+var Version = "0.0.0-dev"
+
 func NewSubcommand(name, description string) *flaggy.Subcommand {
 	cmd := flaggy.NewSubcommand(name)
 	cmd.Description = description
@@ -36,6 +38,7 @@ func main() {
 	set.AddPositionalValue(&setVal, "mode", 1, true, "New mode (light or dark)")
 
 	flaggy.SetName("darkman")
+	flaggy.SetVersion(Version)
 	flaggy.SetDescription("Query and control darkman from the command line")
 	flaggy.Parse()
 

@@ -1,5 +1,7 @@
 DESTDIR?=/
 PREFIX=/usr
+VERSION?=`git describe --tags --dirty 2>/dev/null || echo 0.0.0-dev`
+LDFLAGS+=-X main.Version=$(VERSION)
 
 darkman.1: darkman.1.scd
 	scdoc < darkman.1.scd > darkman.1
@@ -11,7 +13,7 @@ site.tar.gz: index.html
 	tar -cvz index.html man-style.css > site.tar.gz
 
 darkman:
-	go build ./cmd/darkman
+	go build -ldflags "$(LDFLAGS)" ./cmd/darkman
 
 _darkman.zsh: darkman darkman.1
 	./darkman completion zsh > _darkman.zsh
