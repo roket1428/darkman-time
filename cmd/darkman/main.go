@@ -14,12 +14,6 @@ import (
 var rootCmd = &cobra.Command{
 	Use:   "darkman",
 	Short: "Query and control darkman from the command line",
-	PersistentPreRun: func(cmd *cobra.Command, args []string) {
-		// TODO Drop before v1.0.0
-		if filepath.Base(os.Args[0]) == "darkmanctl" {
-			fmt.Println("`darkmanctl` is deprecated; use `darkman` instead.")
-		}
-	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// This function gets run when no other command is specified.
 		// If this command was run as `darkman`, then run the run
