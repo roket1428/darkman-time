@@ -2,97 +2,66 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
+	"strings"
 
-	"github.com/spf13/cobra"
+	"github.com/integrii/flaggy"
 	"gitlab.com/WhyNotHugo/darkman"
 	"gitlab.com/WhyNotHugo/darkman/libdarkman"
 )
 
-// rootCmd represents the base command when called without any subcommands
-var rootCmd = &cobra.Command{
-	Use:   "darkman",
-	Short: "Query and control darkman from the command line",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// This function gets run when no other command is specified.
-		// If this command was run as `darkman`, then run the run
-		// (this is legacy-compat mode). Otherwise, print usage.
+func NewSubcommand(name, description string) *flaggy.Subcommand {
+	cmd := flaggy.NewSubcommand(name)
+	cmd.Description = description
 
-		if filepath.Base(os.Args[0]) == "darkman" {
-			// TODO Drop before v1.0.0
-			fmt.Println("Running `darkman` without arguments is deprecated. Use `darkman run` instead")
-
-			return darkman.ExecuteService()
-		} else {
-			return cmd.Usage()
-		}
-	},
-}
-
-var setCmd = &cobra.Command{
-	Use:       "set",
-	Short:     "Set the current mode",
-	Args:      cobra.ExactValidArgs(1),
-	ValidArgs: []string{"dark", "light"},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return libdarkman.SetMode(args[0])
-	},
-}
-
-var getCmd = &cobra.Command{
-	Use:   "get",
-	Short: "Get the current mode",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		mode, err := libdarkman.GetMode()
-
-		if err != nil {
-			return err
-		}
-		fmt.Println(mode)
-		return nil
-	},
-}
-
-var toggleCmd = &cobra.Command{
-	Use:   "toggle",
-	Short: "Toggle the current mode",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		mode, err := libdarkman.ToggleMode()
-		if err != nil {
-			return err
-		}
-
-		fmt.Println(mode)
-		return nil
-	},
-}
-
-var runCmd = &cobra.Command{
-	Use:   "run",
-	Short: "Run the darkman service",
-	Long: `This command starts the darkman service itself. It should only
-be used by a service manager, by a  session init script or alike.
-
-The service will run in foreground.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		// Avoid showing usage if service fails to start.
-		// See: https://github.com/spf13/cobra/issues/340#issuecomment-374617413
-		cmd.SilenceUsage = true
-		return darkman.ExecuteService()
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(setCmd)
-	rootCmd.AddCommand(getCmd)
-	rootCmd.AddCommand(toggleCmd)
-	rootCmd.AddCommand(runCmd)
+	flaggy.AttachSubcommand(cmd, 1)
+	return cmd
 }
 
 func main() {
-	err := rootCmd.Execute()
+	var setVal string
+
+	get := NewSubcommand("get", "Get and print the current mode")
+	set := NewSubcommand("set", "Set the current mode")
+	toggle := NewSubcommand("toggle", "Toggle the current mode")
+	run := NewSubcommand("run", `Run the darkman service`)
+
+	run.AdditionalHelpPrepend = strings.Join([]string{
+		"",
+		"This command starts the darkman service itself.",
+		"It should only be used by a service manager, by a  session init script or alike.",
+		"",
+		"The service will run in foreground.",
+	}, "\n")
+
+	set.AddPositionalValue(&setVal, "mode", 1, true, "New mode (light or dark)")
+
+	flaggy.SetName("darkman")
+	flaggy.SetDescription("Query and control darkman from the command line")
+	flaggy.Parse()
+
+	var err error
+	switch {
+	case get.Used:
+		mode, err := libdarkman.GetMode()
+		if err == nil {
+			fmt.Println(mode)
+		}
+	case set.Used:
+		// SetMode validates the mode.
+		err = libdarkman.SetMode(setVal)
+	case toggle.Used:
+		mode, err := libdarkman.ToggleMode()
+		if err == nil {
+			fmt.Println(mode)
+		}
+
+	case run.Used:
+		err = darkman.ExecuteService()
+	default:
+		flaggy.ShowHelpAndExit("No command specified")
+	}
+
 	if err != nil {
-		os.Exit(1)
+		flaggy.ShowHelpAndExit(err.Error())
 	}
 }
