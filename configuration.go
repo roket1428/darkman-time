@@ -3,10 +3,13 @@ package darkman
 import (
 	"fmt"
 	"log"
+	"os"
+	"path/filepath"
+	"strconv"
 
 	"github.com/adrg/xdg"
-	"github.com/spf13/viper"
 	"gitlab.com/WhyNotHugo/darkman/geoclue"
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
@@ -17,38 +20,179 @@ type Config struct {
 	Portal     bool
 }
 
+// Returns a new Config with the default values.
+func New() Config {
+	return Config{
+		Lat:        nil,
+		Lng:        nil,
+		UseGeoclue: true,
+		DBusServer: true,
+		Portal:     true,
+	}
+}
+
+// Returns nil if the environment variable is unset.
+func ReadFloatEnvVar(name string) (*float64, error) {
+	if raw, ok := os.LookupEnv(name); ok {
+		if value, err := strconv.ParseFloat(raw, 64); err != nil {
+			return nil, fmt.Errorf("%v is not a valid number: %v", name, err)
+		} else {
+			return &value, nil
+		}
+	}
+	return nil, nil
+}
+
+// Returns nil if the environment variable is unset.
+func ReadBoolEnvVar(name string) (*bool, error) {
+	if raw, ok := os.LookupEnv(name); ok {
+		if value, err := strconv.ParseBool(raw); err != nil {
+			return nil, fmt.Errorf("%v is not a valid boolean: %v", name, err)
+		} else {
+			return &value, nil
+		}
+	}
+	return nil, nil
+}
+
+// Returns nil if the variable is unset.
+func FloatFromYaml(yamlConfig map[interface{}]interface{}, key string) (*float64, error) {
+	if value, ok := yamlConfig[key]; ok {
+		if value, ok := (value).(float64); ok {
+			return &value, nil
+		} else {
+			return nil, fmt.Errorf("%v is not a valid number", key)
+		}
+	}
+	return nil, nil
+}
+
+// Returns nil if the variable is unset.
+func BoolFromYaml(yamlConfig map[interface{}]interface{}, key string) (*bool, error) {
+	if value, ok := yamlConfig[key]; ok {
+		if value, ok := (value).(bool); ok {
+			return &value, nil
+		} else {
+			return nil, fmt.Errorf("%v is not a valid boolean", key)
+		}
+	}
+	return nil, nil
+}
+
+// Loads and updates configuration in place.
+//
+// Returns error for invalid settings. All fields are considered optional.
+func (config *Config) LoadFromEnv() error {
+	if lat, err := ReadFloatEnvVar("DARKMAN_LAT"); err != nil {
+		return err
+	} else if lat != nil {
+		config.Lat = lat
+	}
+
+	if lng, err := ReadFloatEnvVar("DARKMAN_LNG"); err != nil {
+		return err
+	} else if lng != nil {
+		config.Lng = lng
+	}
+
+	if usegeoclue, err := ReadBoolEnvVar("DARKMAN_USEGEOCLUE"); err != nil {
+		return err
+	} else if usegeoclue != nil {
+		config.UseGeoclue = *usegeoclue
+	}
+
+	if dbusserver, err := ReadBoolEnvVar("DARKMAN_DBUSSERVER"); err != nil {
+		return err
+	} else if dbusserver != nil {
+		config.DBusServer = *dbusserver
+	}
+
+	if portal, err := ReadBoolEnvVar("DARKMAN_PORTAL"); err != nil {
+		return err
+	} else if portal != nil {
+		config.Portal = *portal
+	}
+
+	return nil
+}
+
+// Loads a new configuration.
+//
+// Returns error for invalid settings. All fields are considered optional.
+func (config *Config) LoadFromYamlFile(filePath string) error {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+
+	// Using this approach so we can handle missing values explicitly.
+	var yamlConfig map[interface{}]interface{}
+	if err := yaml.NewDecoder(file).Decode(&yamlConfig); err != nil {
+		return err
+	}
+
+	if lat, err := FloatFromYaml(yamlConfig, "lat"); err != nil {
+		return err
+	} else if lat != nil {
+		config.Lat = lat
+	}
+
+	if lng, err := FloatFromYaml(yamlConfig, "lng"); err != nil {
+		return err
+	} else if lng != nil {
+		config.Lng = lng
+	}
+
+	if usegeoclue, err := BoolFromYaml(yamlConfig, "usegeoclue"); err != nil {
+		return err
+	} else if usegeoclue != nil {
+		config.UseGeoclue = *usegeoclue
+	}
+
+	if dbusserver, err := BoolFromYaml(yamlConfig, "dbusserver"); err != nil {
+		return err
+	} else if dbusserver != nil {
+		config.DBusServer = *dbusserver
+	}
+
+	if portal, err := BoolFromYaml(yamlConfig, "portal"); err != nil {
+		return err
+	} else if portal != nil {
+		config.Portal = *portal
+	}
+
+	return nil
+}
+
 func ReadConfig() (*Config, error) {
-	filePath, err := xdg.ConfigFile("darkman")
+	config := &Config{
+		Lat:        nil,
+		Lng:        nil,
+		UseGeoclue: true,
+		DBusServer: true,
+		Portal:     true,
+	}
+
+	configDir, err := xdg.ConfigFile("darkman")
 	if err != nil {
 		return nil, err
 	}
-	viper.SetConfigName("config")
-	viper.SetConfigType("yaml")
-	viper.AddConfigPath(filePath)
 
-	viper.SetDefault("Lat", nil)
-	viper.SetDefault("Lng", nil)
-	viper.SetDefault("UseGeoclue", true)
-	viper.SetDefault("DBusServer", true)
-	viper.SetDefault("Portal", true)
+	configFile := filepath.Join(configDir, "config.yaml")
 
-	err = viper.ReadInConfig()
-	if err == nil {
-		log.Println("Using config file:", viper.ConfigFileUsed())
-	} else {
+	if err := config.LoadFromYamlFile(configFile); err != nil {
 		log.Println(err)
+		// TODO: Should actually bail here, but this is a breaking change:
+		// return nil, fmt.Errorf("error reading configuration file: %v", configFile)
+	} else {
+		log.Println("Using config file:", configFile)
 	}
 
-	// Load env vars (e.g.: DARKMAN_LAT) too.
-	viper.SetEnvPrefix("darkman")
-	viper.AutomaticEnv()
-
-	config := &Config{}
-	err = viper.Unmarshal(config)
-	if err != nil {
-		return nil, fmt.Errorf("could not properly decode config, %v", err)
+	if err := config.LoadFromEnv(); err != nil {
+		return nil, fmt.Errorf("error reading environment variables: %v", err)
 	}
 
+	log.Printf("Loaded configuration: %v\n", config)
 	return config, nil
 }
 
