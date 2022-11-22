@@ -146,3 +146,11 @@ immediately.
 - The man page now indicates the default value for each config setting.
 - When failing to register a D-Bus service (e.g.: because it is already taken),
   darkman will not exit immediately, rather than simply log the error.
+
+## 1.5.0
+
+- When running via systemd.service, darkman no longer depends on
+  `graphical-session.target`.
+- Implemented `--version`.
+- Substantially trimmed down dependency tree by replacing `cobra` and `viper`
+  with `flaggy`
