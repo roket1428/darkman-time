@@ -49,8 +49,7 @@ func readLocationFromCache() (location *geoclue.Location) {
 	}
 
 	location = &geoclue.Location{}
-	err = json.Unmarshal(data, location)
-	if err != nil {
+	if err = json.Unmarshal(data, location); err != nil {
 		log.Printf("Error parsing data from cache file path: %v\n", err)
 		return nil
 	}
@@ -71,8 +70,7 @@ func initGeoclue(onLocation func(geoclue.Location)) (client *geoclue.Geoclient, 
 		for {
 			loc := <-client.Locations
 
-			err := saveLocationToCache(loc)
-			if err != nil {
+			if err := saveLocationToCache(loc); err != nil {
 				log.Println("Error saving location to cache: ", loc)
 			} else {
 				log.Println("Saved location to cache.")
@@ -90,8 +88,7 @@ func initGeoclue(onLocation func(geoclue.Location)) (client *geoclue.Geoclient, 
 // By default, we indicate set geoclue in a rather passive mode; it'll ignore
 // location changes that occurr in less than four hours, or of less than 40km.
 func GetLocations(onLocation func(geoclue.Location)) (err error) {
-	_, err = initGeoclue(onLocation)
-	if err != nil {
+	if _, err = initGeoclue(onLocation); err != nil {
 		return fmt.Errorf("error initialising geoclue: %v", err)
 	}
 

@@ -60,8 +60,8 @@ func CalculateCurrentMode(nextSunrise time.Time, nextSundown time.Time) Mode {
 	}
 }
 
-/// Scheduler handles setting timers based on the current location, and
-/// trigering changes based on the current location and sun position.
+// Scheduler handles setting timers based on the current location, and
+// trigering changes based on the current location and sun position.
 type Scheduler struct {
 	currentLocation *geoclue.Location
 	changeCallback  func(Mode)
@@ -82,8 +82,7 @@ func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode), 
 	}()
 
 	if useGeoclue {
-		err := GetLocations(scheduler.UpdateLocation)
-		if err != nil {
+		if err := GetLocations(scheduler.UpdateLocation); err != nil {
 			log.Println("Could not start location service:", err)
 		}
 	} else if initialLocation != nil {

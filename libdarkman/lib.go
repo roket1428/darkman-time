@@ -33,8 +33,7 @@ func validateMode(mode string) error {
 
 // Set the current mode. Mode MUST be either "light" or "dark".
 func SetMode(mode string) error {
-	err := validateMode(mode)
-	if err != nil {
+	if err := validateMode(mode); err != nil {
 		return err
 	}
 
@@ -43,8 +42,7 @@ func SetMode(mode string) error {
 		return err
 	}
 
-	err = (*obj).SetProperty(prop, dbus.MakeVariant(mode))
-	if err != nil {
+	if err = (*obj).SetProperty(prop, dbus.MakeVariant(mode)); err != nil {
 		return fmt.Errorf("error setting property: %v", err)
 	}
 
@@ -52,31 +50,33 @@ func SetMode(mode string) error {
 }
 
 // Returns the current mode, either "light" or "dark".
-func GetMode() (mode string, err error) {
+func GetMode() (string, error) {
+	var mode string
+
 	obj, err := getDBusObj()
 	if err != nil {
 		return "", err
 	}
 
-	err = (*obj).StoreProperty(prop, &mode)
-	if err != nil {
+	if err = (*obj).StoreProperty(prop, &mode); err != nil {
 		return "", fmt.Errorf("error reading property: %v", err)
 	}
 
-	return
+	return mode, nil
 }
 
 // Toggle the current mode (e.g.: switch to light mode if the current mode is
 // dark mode or viceversa).
 // Returns the current mode, either "light" or "dark".
-func ToggleMode() (mode string, err error) {
+func ToggleMode() (string, error) {
+	var mode string
+
 	obj, err := getDBusObj()
 	if err != nil {
 		return "", err
 	}
 
-	err = (*obj).StoreProperty(prop, &mode)
-	if err != nil {
+	if err = (*obj).StoreProperty(prop, &mode); err != nil {
 		return "", fmt.Errorf("error reading property: %v", err)
 	}
 
@@ -86,10 +86,9 @@ func ToggleMode() (mode string, err error) {
 		mode = "light"
 	}
 
-	err = (*obj).SetProperty(prop, dbus.MakeVariant(mode))
-	if err != nil {
+	if err = (*obj).SetProperty(prop, dbus.MakeVariant(mode)); err != nil {
 		return "", fmt.Errorf("error setting property: %v", err)
 	}
 
-	return
+	return mode, nil
 }

@@ -44,22 +44,21 @@ func (portal *PortalHandle) changeMode(newMode Mode) {
 	}
 
 	portal.mode = modeToPortalValue(newMode)
-	err := portal.conn.Emit(
+	if err := portal.conn.Emit(
 		PORTAL_OBJ_PATH,
 		PORTAL_INTERFACE+".SettingChanged",
 		PORTAL_NAMESPACE,
 		PORTAL_KEY,
 		dbus.MakeVariant(portal.mode),
-	)
-	if err != nil {
+	); err != nil {
 		log.Printf("couldn't emit signal: %v", err)
 	}
 }
 
-/// Create a new D-Bus server instance for the XDG portal API.
-///
-/// Returns a callback function which should be called each time the current
-/// mode changes.
+// Create a new D-Bus server instance for the XDG portal API.
+//
+// Returns a callback function which should be called each time the current
+// mode changes.
 func NewPortal(initial Mode) (*PortalHandle, func(Mode), error) {
 	portal := PortalHandle{mode: modeToPortalValue(initial)}
 
@@ -93,8 +92,8 @@ func (portal *PortalHandle) start() (err error) {
 	}
 
 	// Exoprt the D-Bus object.
-	err = portal.conn.Export(portal, PORTAL_OBJ_PATH, PORTAL_INTERFACE)
-	if err != nil {
+
+	if err = portal.conn.Export(portal, PORTAL_OBJ_PATH, PORTAL_INTERFACE); err != nil {
 		return fmt.Errorf("failed to export interface: %v", err)
 	}
 
@@ -170,12 +169,11 @@ func (portal *PortalHandle) start() (err error) {
 		},
 	}
 
-	err = portal.conn.Export(
+	if err = portal.conn.Export(
 		introspect.NewIntrospectable(n),
 		PORTAL_OBJ_PATH,
 		"org.freedesktop.DBus.Introspectable",
-	)
-	if err != nil {
+	); err != nil {
 		return fmt.Errorf("failed to export dbus name: %v", err)
 	}
 

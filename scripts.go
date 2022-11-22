@@ -1,9 +1,7 @@
 package darkman
 
 import (
-	"errors"
 	"fmt"
-	"io/fs"
 	"log"
 	"os"
 	"os/exec"
@@ -15,9 +13,9 @@ import (
 
 var scriptsRunning sync.Mutex
 
-/// Run transition scripts for a given mode.
-///
-/// Fires up all scripts asyncrhonously and returns immediately.
+// Run transition scripts for a given mode.
+//
+// Fires up all scripts asyncrhonously and returns immediately.
 func RunScripts(mode Mode) {
 	executables := make(map[string]string)
 	directories := make([]string, len(xdg.DataDirs)+1)
@@ -29,11 +27,9 @@ func RunScripts(mode Mode) {
 		modeDir := filepath.Join(dir, fmt.Sprintf("%v-mode.d", mode))
 
 		files, err := os.ReadDir(modeDir)
-		if errors.Is(err, fs.ErrNotExist) {
+		if os.IsNotExist(err) {
 			continue
-		}
-
-		if err != nil {
+		} else if err != nil {
 			log.Println(err.Error())
 			log.Printf("Error reading entries in %v: %v.\n", dir, err)
 		}
@@ -56,8 +52,7 @@ func RunScripts(mode Mode) {
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 
-			err := cmd.Run()
-			if err != nil {
+			if err := cmd.Run(); err != nil {
 				log.Printf("Failed to run: %v.\n", err.Error())
 			}
 		}

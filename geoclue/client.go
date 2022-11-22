@@ -24,36 +24,31 @@ type Location struct {
 	Alt float64 `json:"Alt"`
 }
 
-func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (location *Location, err error) {
-	location = &Location{}
-
+func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (*Location, error) {
+	location := &Location{}
 	obj := client.conn.Object("org.freedesktop.GeoClue2", path)
 
-	err = obj.StoreProperty("org.freedesktop.GeoClue2.Location.Latitude", &location.Lat)
-	if err != nil {
+	if err := obj.StoreProperty("org.freedesktop.GeoClue2.Location.Latitude", &location.Lat); err != nil {
 		return nil, fmt.Errorf("error reading Latitutde: %v", err)
 	}
 
-	err = obj.StoreProperty("org.freedesktop.GeoClue2.Location.Longitude", &location.Lng)
-	if err != nil {
+	if err := obj.StoreProperty("org.freedesktop.GeoClue2.Location.Longitude", &location.Lng); err != nil {
 		return nil, fmt.Errorf("error reading Longitude: %v", err)
 	}
 
-	err = obj.StoreProperty("org.freedesktop.GeoClue2.Location.Altitude", &location.Alt)
-	if err != nil {
+	if err := obj.StoreProperty("org.freedesktop.GeoClue2.Location.Altitude", &location.Alt); err != nil {
 		return nil, fmt.Errorf("error reading Altitude: %v", err)
 	}
 
-	return
+	return location, nil
 }
 
 func (client *Geoclient) listerForLocation() error {
-	err := client.conn.AddMatchSignal(
+	if err := client.conn.AddMatchSignal(
 		dbus.WithMatchObjectPath(client.clientPath),
 		dbus.WithMatchInterface("org.freedesktop.GeoClue2.Client"),
 		// Type: signal...?
-	)
-	if err != nil {
+	); err != nil {
 		return fmt.Errorf("error listening for signal: %v", err)
 	}
 
@@ -105,8 +100,8 @@ func (client *Geoclient) listerForLocation() error {
 // For details on DistanceThreshold and TimeThreshold see the documentation for
 // geoclue's D-Bus API:
 //
-//  - https://www.freedesktop.org/software/geoclue/docs/gdbus-org.freedesktop.GeoClue2.Client.html#gdbus-property-org-freedesktop-GeoClue2-Client.DistanceThreshold
-//  - https://www.freedesktop.org/software/geoclue/docs/gdbus-org.freedesktop.GeoClue2.Client.html#gdbus-property-org-freedesktop-GeoClue2-Client.TimeThreshold
+//   - https://www.freedesktop.org/software/geoclue/docs/gdbus-org.freedesktop.GeoClue2.Client.html#gdbus-property-org-freedesktop-GeoClue2-Client.DistanceThreshold
+//   - https://www.freedesktop.org/software/geoclue/docs/gdbus-org.freedesktop.GeoClue2.Client.html#gdbus-property-org-freedesktop-GeoClue2-Client.TimeThreshold
 func NewClient(desktopId string, timeout time.Duration, distanceThreshold uint32, timeThreshold uint32) (*Geoclient, error) {
 	// TODO: take other params passed to the server here.
 	conn, err := dbus.ConnectSystemBus()
@@ -117,26 +112,31 @@ func NewClient(desktopId string, timeout time.Duration, distanceThreshold uint32
 	obj := conn.Object("org.freedesktop.GeoClue2", "/org/freedesktop/GeoClue2/Manager")
 
 	var clientPath dbus.ObjectPath
-	err = obj.Call("org.freedesktop.GeoClue2.Manager.GetClient", 0).Store(&clientPath)
-	if err != nil {
+	if err = obj.Call(
+		"org.freedesktop.GeoClue2.Manager.GetClient",
+		0,
+	).Store(&clientPath); err != nil {
 		return nil, fmt.Errorf("GetClient failed: %v", err)
 	}
 
 	obj = conn.Object("org.freedesktop.GeoClue2", clientPath)
-	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.DesktopId", dbus.MakeVariant(desktopId))
-	if err != nil {
+	if err = obj.SetProperty(
+		"org.freedesktop.GeoClue2.Client.DesktopId",
+		dbus.MakeVariant(desktopId),
+	); err != nil {
 		return nil, fmt.Errorf("setting DesktopId failed: %v", err)
 	}
 
 	obj = conn.Object("org.freedesktop.GeoClue2", clientPath)
-	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.DistanceThreshold", dbus.MakeVariant(distanceThreshold))
-	if err != nil {
+	if err = obj.SetProperty(
+		"org.freedesktop.GeoClue2.Client.DistanceThreshold",
+		dbus.MakeVariant(distanceThreshold),
+	); err != nil {
 		return nil, fmt.Errorf("setting DistanceThreshold failed: %v", err)
 	}
 
 	obj = conn.Object("org.freedesktop.GeoClue2", clientPath)
-	err = obj.SetProperty("org.freedesktop.GeoClue2.Client.TimeThreshold", dbus.MakeVariant(timeThreshold))
-	if err != nil {
+	if err = obj.SetProperty("org.freedesktop.GeoClue2.Client.TimeThreshold", dbus.MakeVariant(timeThreshold)); err != nil {
 		return nil, fmt.Errorf("setting TimeThreshold failed: %v", err)
 	}
 
@@ -154,14 +154,12 @@ func NewClient(desktopId string, timeout time.Duration, distanceThreshold uint32
 		log.Println("geoclue: WARNING! the server hasn't responded; is it working? Timeout is:", timeout)
 	}()
 
-	err = client.listerForLocation()
-	if err != nil {
+	if err = client.listerForLocation(); err != nil {
 		return nil, err
 	}
 
 	obj = client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
-	err = obj.Call("org.freedesktop.GeoClue2.Client.Start", 0).Err
-	if err != nil {
+	if err = obj.Call("org.freedesktop.GeoClue2.Client.Start", 0).Err; err != nil {
 		return nil, err
 	}
 
@@ -185,12 +183,13 @@ func (client Geoclient) StopClient() error {
 }
 
 // Check if the client is currently active or inactive.
-func (client Geoclient) IsActive() (active bool, err error) {
+func (client Geoclient) IsActive() (bool, error) {
+	var active bool
+
 	obj := client.conn.Object("org.freedesktop.GeoClue2", client.clientPath)
-	err = obj.StoreProperty("org.freedesktop.GeoClue2.Client.Active", &active)
-	if err != nil {
+	if err := obj.StoreProperty("org.freedesktop.GeoClue2.Client.Active", &active); err != nil {
 		return false, fmt.Errorf("error reading Active prop: %v", err)
 	}
 
-	return
+	return active, nil
 }

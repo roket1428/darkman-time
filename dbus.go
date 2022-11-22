@@ -24,8 +24,8 @@ func (handle *ServerHandle) emitChangeSignal() {
 	}
 }
 
-/// Changes the current mode to `Mode`. This function is to be called when the
-/// mode is changed by another / subsystem.
+// Changes the current mode to `Mode`. This function is to be called when the
+// mode is changed by another / subsystem.
 func (handle *ServerHandle) changeMode(newMode Mode) {
 	if handle.conn == nil {
 		if err := handle.start(); err != nil {
@@ -39,7 +39,7 @@ func (handle *ServerHandle) changeMode(newMode Mode) {
 	handle.emitChangeSignal()
 }
 
-/// Called when the mode is changed by writing to the D-Bus prop.
+// Called when the mode is changed by writing to the D-Bus prop.
 func (handle *ServerHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 	newMode := Mode(c.Value.(string))
 	if newMode != DARK && newMode != LIGHT {
@@ -58,13 +58,13 @@ func (handle *ServerHandle) Close() error {
 	return handle.conn.Close()
 }
 
-/// Create a new D-Bus server instance for our API.
-///
-/// Takes as parameter a function that will be called each time the current
-/// mode is changed via this D-Bus API.
-///
-/// Returns a callback function which should be called each time the current
-/// mode changes by some other mechanism.
+// Create a new D-Bus server instance for our API.
+//
+// Takes as parameter a function that will be called each time the current
+// mode is changed via this D-Bus API.
+//
+// Returns a callback function which should be called each time the current
+// mode changes by some other mechanism.
 func NewDbusServer(initial Mode, onChange func(Mode)) (*ServerHandle, func(Mode), error) {
 	handle := ServerHandle{
 		c:                make(chan Mode),

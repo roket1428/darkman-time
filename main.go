@@ -25,7 +25,7 @@ const (
 	DARK  Mode = "dark"
 )
 
-/// Creates a new Service instance.
+// Creates a new Service instance.
 func NewService(initialMode Mode) Service {
 	return Service{
 		currentMode: initialMode,
@@ -33,13 +33,13 @@ func NewService(initialMode Mode) Service {
 	}
 }
 
-/// Add a callback to be run each time the current mode changes.
+// Add a callback to be run each time the current mode changes.
 func (service *Service) AddListener(listener func(Mode)) {
 	*service.listeners = append(*service.listeners, listener)
 	listener(service.currentMode) // Apply once with the initial mode.
 }
 
-/// Change the current mode (and run all callbacks).
+// Change the current mode (and run all callbacks).
 func (service *Service) ChangeMode(mode Mode) {
 	log.Printf("Mode should now be: %v mode.\n", mode)
 	if mode == service.currentMode {
@@ -60,8 +60,7 @@ func saveModeToCache(mode Mode) {
 		return
 	}
 
-	err = os.WriteFile(cacheFilePath, []byte(mode), os.FileMode(0600))
-	if err != nil {
+	if err = os.WriteFile(cacheFilePath, []byte(mode), os.FileMode(0600)); err != nil {
 		fmt.Println("Failed to save mode to cache:", err)
 		return
 	}
@@ -94,24 +93,24 @@ func readModeFromCache() (Mode, error) {
 // devices, which are unlikely to have a "last known location".
 func GetInitialMode(location *geoclue.Location) Mode {
 	if location != nil {
-		mode, err := DetermineModeForRightNow(*location)
-		if err != nil {
+		if mode, err := DetermineModeForRightNow(*location); err != nil {
 			log.Println("Couldn't load previous mode from cache:", err)
 			return NULL
+		} else {
+			return *mode // FIXME: check that this `mode != nil`.
 		}
-		return *mode
 	} else {
-		mode, err := readModeFromCache()
-		if err != nil {
+		if mode, err := readModeFromCache(); err != nil {
 			log.Println("Couldn't load previous mode from cache:", err)
 			return NULL
+		} else {
+			return mode
 		}
-		return mode
 	}
 
 }
 
-/// Run the darkman service.
+// Run the darkman service.
 func ExecuteService() error {
 	log.SetFlags(log.Lshortfile)
 
@@ -163,8 +162,7 @@ func ExecuteService() error {
 	if initialLocation != nil || config.UseGeoclue {
 		// Start after registering all callbacks, so that the first changes
 		// are triggered after they're all listening.
-		err = NewScheduler(initialLocation, service.ChangeMode, config.UseGeoclue)
-		if err != nil {
+		if err = NewScheduler(initialLocation, service.ChangeMode, config.UseGeoclue); err != nil {
 			return fmt.Errorf("failed to initialise service scheduler: %v", err)
 		}
 	} else {
