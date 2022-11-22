@@ -2,7 +2,7 @@ darkman(1)
 
 # NAME
 
-darkman - daemon for dark-mode and light-mode transitions on Linux desktop
+darkman - daemon for dark-mode and light-mode transitions on Unix-like desktops
 
 # SYNOPSIS
 
@@ -37,7 +37,7 @@ automatic transitions entirely.
 
 # INTEGRATIONS
 
-The Linux desktop ecosystem is quite heterogeneous and switching between
+The open source desktop ecosystem is quite heterogeneous and switching between
 dark/light mode on different applications requires different mechanism and
 techniques.
 

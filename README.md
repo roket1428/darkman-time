@@ -1,7 +1,7 @@
 darkman
 =======
 
-A framework for dark-mode and light-mode transitions on Linux desktop.
+A framework for dark-mode and light-mode transitions on Unix-like desktops.
 
 ## Introduction
 
