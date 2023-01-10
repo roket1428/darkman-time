@@ -50,13 +50,17 @@ install...`).
 
 ## Setup
 
-You can run the service any way you prefer. If you use systemd, a service file
-is included:
+You can run the service any way you prefer. A simple and safe approach is to
+just run it via the autostart/exec mechanism of your window manager (or wayland
+compositor).
+
+If you use superd, the superd-services package includes a service definition:
+
+    superctl enable --now darkman
+
+If you use systemd, a service file is included:
 
     systemctl --user enable --now darkman.service
-
-`darkman` **DOES NOT** depend on systemd, and is usable on non-systemd
-distributions.
 
 Note that the dark-mode and light-mode scripts mentioned above (and available
 in the source repository) are not included in this package. You'll need to
