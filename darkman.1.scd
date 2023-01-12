@@ -70,6 +70,10 @@ controlling the current mode. The *get*, *set* and *toggle* commands all use
 this API. Usage of this API is also the recommended approach when writing custom
 tools (e.g.: switching the current mode based on the input from a light sensor).
 
+For Emacs users, a third party package exists to integrate darkman with Emacs:
+
+	https://github.com/grtcdr/darkman.el
+
 # LOCATION
 
 darkman will automatically determine the system's location using *geoclue*.
