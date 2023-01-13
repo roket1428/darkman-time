@@ -13,7 +13,7 @@ Slice=background.slice
 LockPersonality=yes
 RestrictNamespaces=yes
 SystemCallArchitectures=native
-SystemCallFilter=@system-service @timer
+SystemCallFilter=@system-service @timer mincore
 MemoryDenyWriteExecute=yes
 
 [Install]
