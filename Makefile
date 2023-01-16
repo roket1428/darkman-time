@@ -15,17 +15,8 @@ site.tar.gz: index.html
 darkman:
 	go build -ldflags "$(LDFLAGS)" ./cmd/darkman
 
-_darkman.zsh: darkman darkman.1
-	./darkman completion zsh > _darkman.zsh
-
-darkman.bash: darkman darkman.1
-	./darkman completion bash > darkman.bash
-
-.PHONY: completion
-completion: _darkman.zsh darkman.bash
-
 .PHONY: build
-build: darkman darkman.1 completion
+build: darkman darkman.1
 
 .PHONY: install
 install: build
@@ -34,8 +25,6 @@ install: build
 	@install -Dm644 darkman.service	${DESTDIR}${PREFIX}/lib/systemd/user/darkman.service
 	@install -Dm644 darkman.1	${DESTDIR}${PREFIX}/share/man/man1/darkman.1
 	@install -Dm644 LICENCE 	${DESTDIR}${PREFIX}/share/licenses/darkman/LICENCE
-	@install -Dm644 _darkman.zsh ${DESTDIR}${PREFIX}/share/zsh/site-functions/_darkman
-	@install -Dm644 darkman.bash ${DESTDIR}${PREFIX}/share/bash-completion/completions/darkman
 	@install -Dm644 contrib/dbus/nl.whynothugo.darkman.service \
 		${DESTDIR}${PREFIX}/share/dbus-1/services/nl.whynothugo.darkman.service
 	@install -Dm644 contrib/dbus/org.freedesktop.impl.portal.desktop.darkman.service \
