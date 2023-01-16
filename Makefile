@@ -42,7 +42,3 @@ install: build
 		${DESTDIR}${PREFIX}/share/dbus-1/services/org.freedesktop.impl.portal.desktop.darkman.service
 	@install -Dm644 contrib/portal/darkman.portal \
 		${DESTDIR}${PREFIX}/share/xdg-desktop-portal/portals/darkman.portal
-
-.PHONY: aur
-aur:
-	git subtree push -P contrib/aur ssh://aur@aur.archlinux.org/darkman.git master
