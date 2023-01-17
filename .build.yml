@@ -10,6 +10,9 @@ tasks:
   - site: |
       cd darkman
       make site.tar.gz
+  - main-only: |
+      cd darkman
+      [ "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)" ] || complete-build
   - publish: |
       cd darkman
       hut pages publish -d darkman.whynothugo.nl site.tar.gz
