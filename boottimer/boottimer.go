@@ -44,7 +44,7 @@ func SetTimer(d time.Duration) {
 			tv_nsec: 0,
 		},
 		it_value: C.struct_timespec{
-			tv_sec:  C.long(seconds),
+			tv_sec:  C.time_t(seconds),
 			tv_nsec: C.long(ns),
 		},
 	}
