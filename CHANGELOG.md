@@ -154,3 +154,15 @@ immediately.
 - Implemented `--version`.
 - Substantially trimmed down dependency tree by replacing `cobra` and `viper`
   with `flaggy`
+
+## 1.5.1
+
+- Fixed breakage in build scripts.
+
+## 1.5.2
+
+- Fixed build failures on non-64bit architectures.
+
+## 1.5.3
+
+- Avoid conflicting usage of LDFLAGS in build scripts.
