@@ -1,7 +1,6 @@
 DESTDIR?=/
 PREFIX=/usr
 VERSION?=`git describe --tags --dirty 2>/dev/null || echo 0.0.0-dev`
-GO_LDFLAGS+=-X main.Version=$(VERSION)
 
 darkman.1: darkman.1.scd
 	scdoc < darkman.1.scd > darkman.1
@@ -13,7 +12,7 @@ site.tar.gz: index.html
 	tar -cvz index.html man-style.css > site.tar.gz
 
 darkman:
-	go build -ldflags "$(GO_LDFLAGS)" ./cmd/darkman
+	go build -ldflags "-X main.Version=$(VERSION)" ./cmd/darkman
 
 .PHONY: build
 build: darkman darkman.1
