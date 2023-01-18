@@ -84,15 +84,18 @@ func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode), 
 	if useGeoclue {
 		if err := GetLocations(scheduler.UpdateLocation); err != nil {
 			log.Println("Could not start location service:", err)
+		} else {
+			return nil
 		}
-	} else if initialLocation != nil {
-		log.Println("Not using geoclue; using static location.")
-		scheduler.UpdateLocation(*initialLocation)
-	} else {
-		return fmt.Errorf("no location source available")
 	}
 
-	return nil
+	if initialLocation != nil {
+		log.Println("Not using geoclue; using static location.")
+		scheduler.UpdateLocation(*initialLocation)
+		return nil
+	}
+
+	return fmt.Errorf("no location source available")
 }
 
 func (handler *Scheduler) UpdateLocation(newLocation geoclue.Location) {

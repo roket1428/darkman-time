@@ -166,3 +166,8 @@ immediately.
 ## 1.5.3
 
 - Avoid conflicting usage of LDFLAGS in build scripts.
+
+## 1.5.4
+
+- Fixed a bug where darkman would stall if geoclue was not running or not
+  present.
