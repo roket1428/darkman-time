@@ -48,7 +48,7 @@ func RunScripts(mode Mode) {
 		for _, executable := range executables {
 			log.Printf("Running %v...", executable)
 
-			cmd := exec.Command("bash", "-c", executable)
+			cmd := exec.Command(executable)
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
 
