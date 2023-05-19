@@ -67,7 +67,7 @@ func saveModeToCache(mode Mode) {
 }
 
 func readModeFromCache() (Mode, error) {
-	cacheFilePath, err := xdg.CacheFile("darkman/location.txt")
+	cacheFilePath, err := xdg.CacheFile("darkman/mode.txt")
 	if err != nil {
 		return NULL, fmt.Errorf("error determining cache file path: %v", err)
 	}
