@@ -78,8 +78,10 @@ func readModeFromCache() (Mode, error) {
 	}
 
 	var tmp interface{} = string(data[:])
-	if tmp == DARK || tmp == LIGHT {
-		return tmp.(Mode), nil
+	if tmp == string(DARK) {
+		return DARK, nil
+	} else if tmp == string(LIGHT) {
+		return LIGHT, nil
 	} else {
 		return NULL, nil
 
