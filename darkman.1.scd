@@ -103,8 +103,9 @@ The following settings are available:
 
 - *usegeoclue* (*true*/false): Whether to use a local geoclue instance to
   determine the current location. On some distributions/setups, this may
-  require setting up a geoclue agent to function properly. The default for this
-  will change to *false* in v2.0.
+  require setting up a geoclue agent to function properly. Setting this to
+  false without explicitly setting lat and lng disables automatic transitions
+  entirely. The default for this will change to *false* in v2.0.
 
 - *dbusserver* (*true*/false): Whether to expose the current mode via darkman's
   own D-Bus API. The command line tool uses this API to apply changes, so it
