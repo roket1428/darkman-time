@@ -119,46 +119,19 @@ func (config *Config) LoadFromEnv() error {
 // Loads a new configuration.
 //
 // Returns error for invalid settings. All fields are considered optional.
+// Fails is any unknown fields are found (this usually indicates a typy). Does
+// not overwrite any values already defined in `config`.
 func (config *Config) LoadFromYamlFile(filePath string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return err
 	}
 
-	// Using this approach so we can handle missing values explicitly.
-	var yamlConfig map[interface{}]interface{}
-	if err := yaml.NewDecoder(file).Decode(&yamlConfig); err != nil {
-		return err
-	}
+	yamlDecoder := yaml.NewDecoder(file)
+	yamlDecoder.KnownFields(true)
 
-	if lat, err := FloatFromYaml(yamlConfig, "lat"); err != nil {
-		return err
-	} else if lat != nil {
-		config.Lat = lat
-	}
-
-	if lng, err := FloatFromYaml(yamlConfig, "lng"); err != nil {
-		return err
-	} else if lng != nil {
-		config.Lng = lng
-	}
-
-	if usegeoclue, err := BoolFromYaml(yamlConfig, "usegeoclue"); err != nil {
-		return err
-	} else if usegeoclue != nil {
-		config.UseGeoclue = *usegeoclue
-	}
-
-	if dbusserver, err := BoolFromYaml(yamlConfig, "dbusserver"); err != nil {
-		return err
-	} else if dbusserver != nil {
-		config.DBusServer = *dbusserver
-	}
-
-	if portal, err := BoolFromYaml(yamlConfig, "portal"); err != nil {
-		return err
-	} else if portal != nil {
-		config.Portal = *portal
+	if err := yamlDecoder.Decode(&config); err != nil {
+		return fmt.Errorf("error parsing configuration file: %s", err)
 	}
 
 	return nil
