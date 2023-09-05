@@ -128,6 +128,17 @@ _DARKMAN_LNG_
 _DARKMAN_DBUSSERVER_
 	Overrides whether to expose the current mode via D-Bus.
 
+# PORTAL
+
+As for *xdg-desktop-portal* version 1.17.0, portals can be configured with
+per-user configuration *portals.conf(5)*. To force the usage of darkman for
+dark/light mode setting, use something like the following:
+
+```
+[preferred]
+org.freedesktop.impl.portal.Settings=darkman
+```
+
 # PRIVACY
 
 Darkman will trigger a darkmode/lightmode transition at sundown in the current
@@ -144,6 +155,7 @@ hosted at GitLab:
 
 # SEE ALSO
 
+portals.conf(5)
 gammastep(1)
 
 # AUTHORS
