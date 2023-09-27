@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/integrii/flaggy"
@@ -65,6 +66,6 @@ func main() {
 	}
 
 	if err != nil {
-		flaggy.ShowHelpAndExit(err.Error())
+		log.Fatalf(err.Error())
 	}
 }
