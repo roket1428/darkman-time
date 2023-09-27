@@ -171,3 +171,12 @@ immediately.
 
 - Fixed a bug where darkman would stall if geoclue was not running or not
   present.
+
+## 2.0.0
+
+- **BREAKING** Exit with an error if the configuration file has unknown fields.
+- Don't print usage output if an error occurs. Only show it if the provided
+  arguments are invalid. This was a bug, and make reading error output
+  extremely unintuitive.
+- Various improvements to example scripts.
+- Various documentation improvements, including docs for `portals.conf`.
