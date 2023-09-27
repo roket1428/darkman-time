@@ -101,11 +101,11 @@ The following settings are available:
   enabled). More than one decimal point is generally not needed, as described
   in https://xkcd.com/2170/.
 
-- *usegeoclue* (*true*/false): Whether to use a local geoclue instance to
+- *usegeoclue* (true/*false*): Whether to use a local geoclue instance to
   determine the current location. On some distributions/setups, this may
   require setting up a geoclue agent to function properly. Setting this to
   false without explicitly setting lat and lng disables automatic transitions
-  entirely. The default for this will change to *false* in v2.0.
+  entirely.
 
 - *dbusserver* (*true*/false): Whether to expose the current mode via darkman's
   own D-Bus API. The command line tool uses this API to apply changes, so it

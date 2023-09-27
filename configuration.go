@@ -25,7 +25,7 @@ func New() Config {
 	return Config{
 		Lat:        nil,
 		Lng:        nil,
-		UseGeoclue: true,
+		UseGeoclue: false,
 		DBusServer: true,
 		Portal:     true,
 	}
@@ -138,13 +138,7 @@ func (config *Config) LoadFromYamlFile(filePath string) error {
 }
 
 func ReadConfig() (*Config, error) {
-	config := &Config{
-		Lat:        nil,
-		Lng:        nil,
-		UseGeoclue: true,
-		DBusServer: true,
-		Portal:     true,
-	}
+	config := New()
 
 	configDir, err := xdg.ConfigFile("darkman")
 	if err != nil {
@@ -166,7 +160,7 @@ func ReadConfig() (*Config, error) {
 	}
 
 	log.Printf("Loaded configuration: %v\n", config)
-	return config, nil
+	return &config, nil
 }
 
 func (config *Config) GetLocation() (*geoclue.Location, error) {

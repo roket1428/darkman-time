@@ -175,6 +175,8 @@ immediately.
 ## 2.0.0
 
 - **BREAKING** Exit with an error if the configuration file has unknown fields.
+- **BREAKING** Geoclue integration is now disabled by default. To retain the
+  previous behaviour, explicitly enable it in the configuration file.
 - Don't print usage output if an error occurs. Only show it if the provided
   arguments are invalid. This was a bug, and make reading error output
   extremely unintuitive.
