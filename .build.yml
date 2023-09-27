@@ -9,10 +9,10 @@ sources:
 tasks:
   - site: |
       cd darkman
-      make site.tar.gz
+      mandoc -T html -O style=man-style.css < darkman.1 > site/index.html
   - main-only: |
       cd darkman
       [ "$(git rev-parse origin/main)" = "$(git rev-parse HEAD)" ] || complete-build
   - publish: |
       cd darkman
-      hut pages publish -d darkman.whynothugo.nl site.tar.gz
+      hut pages publish -d darkman.whynothugo.nl site/

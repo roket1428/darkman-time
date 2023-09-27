@@ -5,12 +5,6 @@ VERSION?=`git describe --tags --dirty 2>/dev/null || echo 0.0.0-dev`
 darkman.1: darkman.1.scd
 	scdoc < darkman.1.scd > darkman.1
 
-index.html: darkman.1
-	mandoc -T html -O style=man-style.css < darkman.1 > index.html
-
-site.tar.gz: index.html
-	tar -cvz index.html man-style.css > site.tar.gz
-
 darkman:
 	go build -ldflags "-X main.Version=$(VERSION)" ./cmd/darkman
 
