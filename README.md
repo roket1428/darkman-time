@@ -29,6 +29,10 @@ determine the current mode and listen for changes (see below for details).
 
 ## Installation
 
+### Alpine
+
+    apk add darkman
+
 ### ArchLinux
 
     pacman -S darkman
