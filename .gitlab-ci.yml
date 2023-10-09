@@ -3,14 +3,10 @@ lint:
   script:
     - golangci-lint run -v
 
-test:
+build+test:
   image: golang:1.18
   script:
     - go test
-
-build:
-  image: golang:1.18
-  script:
     - go build
   artifacts:
     paths:
