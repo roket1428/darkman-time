@@ -134,6 +134,7 @@ func ExecuteService() error {
 	}
 
 	initialMode := GetInitialMode(initialLocation)
+	log.Println("Initial mode set to:", initialMode)
 
 	service := NewService(initialMode)
 	service.AddListener(RunScripts)
