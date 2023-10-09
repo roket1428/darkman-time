@@ -42,3 +42,55 @@ func TestLoadFromYaml(t *testing.T) {
 		t.Errorf("config.Portal want=1.2, got=%t", config.Portal)
 	}
 }
+
+func TestHashing(t *testing.T) {
+	lat := 12.12
+	lng := 14.14
+	config1 := Config{
+		Lat:        &lat,
+		Lng:        &lng,
+		UseGeoclue: false,
+		DBusServer: true,
+		Portal:     true,
+	}
+
+	lng2 := 14.14
+	config2 := Config{
+		Lat:        &lat,
+		Lng:        &lng2,
+		UseGeoclue: false,
+		DBusServer: true,
+		Portal:     true,
+	}
+
+	hash1, err := config1.Hash()
+	if err != nil {
+		t.Fatal("error calculating hash for config1:", err)
+	}
+
+	hash2, err := config2.Hash()
+	if err != nil {
+		t.Fatal("error calculating hash for config2:", err)
+	}
+
+	if hash1 != hash2 {
+		t.Error("hash for identical configs does not match")
+	}
+
+	config3 := Config{
+		Lat:        &lat,
+		Lng:        &lng2,
+		UseGeoclue: true, // This one is different
+		DBusServer: true,
+		Portal:     true,
+	}
+
+	hash3, err := config3.Hash()
+	if err != nil {
+		t.Fatal("error calculating hash for config3:", err)
+	}
+
+	if hash1 == hash3 {
+		t.Error("hash for different configs is the same")
+	}
+}

@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	"github.com/adrg/xdg"
+	"github.com/rxwycdh/rxhash"
 	"gitlab.com/WhyNotHugo/darkman/geoclue"
 	"gopkg.in/yaml.v3"
 )
@@ -174,4 +175,8 @@ func (config *Config) GetLocation() (*geoclue.Location, error) {
 	}
 
 	return &location, nil
+}
+
+func (config *Config) Hash() (string, error) {
+	return rxhash.HashStruct(config)
 }
