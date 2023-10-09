@@ -31,7 +31,7 @@ determine the current mode and listen for changes (see below for details).
 
 ### ArchLinux
 
-    paru -S darkman
+    pacman -S darkman
 
 ### Fedora
 
