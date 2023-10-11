@@ -9,12 +9,6 @@ ExecStart=/usr/bin/darkman run
 Restart=on-failure
 TimeoutStopSec=15
 Slice=background.slice
-# Security hardening:
-LockPersonality=yes
-RestrictNamespaces=yes
-SystemCallArchitectures=native
-SystemCallFilter=@system-service @timer mincore
-MemoryDenyWriteExecute=yes
 
 [Install]
 WantedBy=default.target
