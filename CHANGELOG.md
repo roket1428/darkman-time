@@ -183,3 +183,5 @@ immediately.
   extremely unintuitive.
 - Various improvements to example scripts.
 - Various documentation improvements, including docs for `portals.conf`.
+- Droped hardening rules for the systemd service. This doesn't realistically
+  add much security in the end but interferes with several configurations.
