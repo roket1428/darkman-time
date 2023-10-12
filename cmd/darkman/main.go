@@ -67,11 +67,21 @@ The service will run in foreground.`,
 	},
 }
 
+var checkCmd = &cobra.Command{
+	Use:   "check",
+	Short: "Check the configuration file",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		_, err := darkman.ReadConfig()
+		return err
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(setCmd)
 	rootCmd.AddCommand(getCmd)
 	rootCmd.AddCommand(toggleCmd)
 	rootCmd.AddCommand(runCmd)
+	rootCmd.AddCommand(checkCmd)
 }
 
 func main() {
@@ -80,5 +90,3 @@ func main() {
 		os.Exit(1)
 	}
 }
-
-// TODO: a command to check the configuration file and exit.
