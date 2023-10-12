@@ -33,7 +33,7 @@ func New() Config {
 }
 
 // Returns nil if the environment variable is unset.
-func ReadFloatEnvVar(name string) (*float64, error) {
+func readFloatEnvVar(name string) (*float64, error) {
 	if raw, ok := os.LookupEnv(name); ok {
 		if value, err := strconv.ParseFloat(raw, 64); err != nil {
 			return nil, fmt.Errorf("%v is not a valid number: %v", name, err)
@@ -45,7 +45,7 @@ func ReadFloatEnvVar(name string) (*float64, error) {
 }
 
 // Returns nil if the environment variable is unset.
-func ReadBoolEnvVar(name string) (*bool, error) {
+func readBoolEnvVar(name string) (*bool, error) {
 	if raw, ok := os.LookupEnv(name); ok {
 		if value, err := strconv.ParseBool(raw); err != nil {
 			return nil, fmt.Errorf("%v is not a valid boolean: %v", name, err)
@@ -60,31 +60,31 @@ func ReadBoolEnvVar(name string) (*bool, error) {
 //
 // Returns error for invalid settings. All fields are considered optional.
 func (config *Config) LoadFromEnv() error {
-	if lat, err := ReadFloatEnvVar("DARKMAN_LAT"); err != nil {
+	if lat, err := readFloatEnvVar("DARKMAN_LAT"); err != nil {
 		return err
 	} else if lat != nil {
 		config.Lat = lat
 	}
 
-	if lng, err := ReadFloatEnvVar("DARKMAN_LNG"); err != nil {
+	if lng, err := readFloatEnvVar("DARKMAN_LNG"); err != nil {
 		return err
 	} else if lng != nil {
 		config.Lng = lng
 	}
 
-	if usegeoclue, err := ReadBoolEnvVar("DARKMAN_USEGEOCLUE"); err != nil {
+	if usegeoclue, err := readBoolEnvVar("DARKMAN_USEGEOCLUE"); err != nil {
 		return err
 	} else if usegeoclue != nil {
 		config.UseGeoclue = *usegeoclue
 	}
 
-	if dbusserver, err := ReadBoolEnvVar("DARKMAN_DBUSSERVER"); err != nil {
+	if dbusserver, err := readBoolEnvVar("DARKMAN_DBUSSERVER"); err != nil {
 		return err
 	} else if dbusserver != nil {
 		config.DBusServer = *dbusserver
 	}
 
-	if portal, err := ReadBoolEnvVar("DARKMAN_PORTAL"); err != nil {
+	if portal, err := readBoolEnvVar("DARKMAN_PORTAL"); err != nil {
 		return err
 	} else if portal != nil {
 		config.Portal = *portal
