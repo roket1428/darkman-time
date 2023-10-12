@@ -140,15 +140,14 @@ func (handler *Scheduler) Tick() {
 	setNextAlarm(now, mode, sunrise, sundown)
 }
 
-func DetermineModeForRightNow(location geoclue.Location) (*Mode, error) {
+func DetermineModeForRightNow(location geoclue.Location) (Mode, error) {
 	now := time.Now()
 	sunrise, sundown, err := NextSunriseAndSundown(location, now.Add(time.Minute))
 	if err != nil {
-		return nil, fmt.Errorf("error calculating next sundown/sunrise: %v", err)
+		return NULL, fmt.Errorf("error calculating next sundown/sunrise: %v", err)
 	}
-	mode := CalculateCurrentMode(sunrise, sundown)
 
-	return &mode, nil
+	return CalculateCurrentMode(sunrise, sundown), nil
 }
 
 func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.Time) {

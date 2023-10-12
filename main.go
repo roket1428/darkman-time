@@ -103,7 +103,7 @@ func GetInitialMode(location *geoclue.Location) Mode {
 			log.Println("Could not determine mode for location:", err)
 			return NULL
 		} else {
-			return *mode
+			return mode
 		}
 	} else if mode, err := readModeFromCache(); err != nil {
 		log.Println("Could not load previous mode from cache:", err)
