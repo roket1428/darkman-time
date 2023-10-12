@@ -89,27 +89,28 @@ func readModeFromCache() (Mode, error) {
 }
 
 // Gets the initial mode.
-// If the location is known, the mode is computed for that location. Unless the
-// device has travelled across timezones, it should be the correct setting.
-// Otherwise, load the last-known mode. This work well for manually controlled
-// devices, which are unlikely to have a "last known location".
+//
+// If the location is known, the mode is computed for that location. This
+// should be the default value unless the local timezone has changed or the
+// device has travelled across timezones.
+//
+// If no location is known, load the last-known mode. This work well for
+// manually controlled devices, which are unlikely to have a "last known
+// location".
 func GetInitialMode(location *geoclue.Location) Mode {
 	if location != nil {
 		if mode, err := DetermineModeForRightNow(*location); err != nil {
-			log.Println("Couldn't load previous mode from cache:", err)
+			log.Println("Could not determine mode for location:", err)
 			return NULL
 		} else {
-			return *mode // FIXME: check that this `mode != nil`.
+			return *mode
 		}
+	} else if mode, err := readModeFromCache(); err != nil {
+		log.Println("Could not load previous mode from cache:", err)
+		return NULL
 	} else {
-		if mode, err := readModeFromCache(); err != nil {
-			log.Println("Couldn't load previous mode from cache:", err)
-			return NULL
-		} else {
-			return mode
-		}
+		return mode
 	}
-
 }
 
 // Run the darkman service.
