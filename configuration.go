@@ -56,30 +56,6 @@ func ReadBoolEnvVar(name string) (*bool, error) {
 	return nil, nil
 }
 
-// Returns nil if the variable is unset.
-func FloatFromYaml(yamlConfig map[interface{}]interface{}, key string) (*float64, error) {
-	if value, ok := yamlConfig[key]; ok {
-		if value, ok := (value).(float64); ok {
-			return &value, nil
-		} else {
-			return nil, fmt.Errorf("%v is not a valid number", key)
-		}
-	}
-	return nil, nil
-}
-
-// Returns nil if the variable is unset.
-func BoolFromYaml(yamlConfig map[interface{}]interface{}, key string) (*bool, error) {
-	if value, ok := yamlConfig[key]; ok {
-		if value, ok := (value).(bool); ok {
-			return &value, nil
-		} else {
-			return nil, fmt.Errorf("%v is not a valid boolean", key)
-		}
-	}
-	return nil, nil
-}
-
 // Loads and updates configuration in place.
 //
 // Returns error for invalid settings. All fields are considered optional.
