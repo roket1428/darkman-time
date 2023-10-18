@@ -1,6 +1,7 @@
 package darkman
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -37,10 +38,8 @@ func modeToPortalValue(mode Mode) uint {
 
 func (portal *PortalHandle) changeMode(newMode Mode) {
 	if portal.conn == nil {
-		if err := portal.start(); err != nil {
-			log.Printf("Could not start D-Bus server: %v", err)
-			return
-		}
+		log.Printf("Cannot emit signal; no connection to dbus.")
+		return
 	}
 
 	portal.mode = modeToPortalValue(newMode)
@@ -59,17 +58,17 @@ func (portal *PortalHandle) changeMode(newMode Mode) {
 //
 // Returns a callback function which should be called each time the current
 // mode changes.
-func NewPortal(initial Mode) (*PortalHandle, func(Mode), error) {
+func NewPortal(ctx context.Context, initial Mode) (func(Mode), error) {
 	portal := PortalHandle{mode: modeToPortalValue(initial)}
 
-	if err := portal.start(); err != nil {
-		return nil, nil, fmt.Errorf("could not start D-Bus server: %v", err)
+	if err := portal.start(ctx); err != nil {
+		return nil, fmt.Errorf("could not start D-Bus server: %v", err)
 	}
 
-	return &portal, portal.changeMode, nil
+	return portal.changeMode, nil
 }
 
-func (portal *PortalHandle) start() (err error) {
+func (portal *PortalHandle) start(ctx context.Context) (err error) {
 	portal.conn, err = dbus.ConnectSessionBus()
 	if err != nil {
 		return fmt.Errorf("could not connect to session D-Bus: %v", err)
@@ -186,6 +185,11 @@ func (portal *PortalHandle) start() (err error) {
 	}
 
 	log.Println("Listening on D-Bus:", PORTAL_BUS_NAME)
+
+	go func() {
+		<-ctx.Done()
+		portal.close()
+	}()
 	return nil
 }
 
@@ -212,6 +216,6 @@ func (portal *PortalHandle) ReadAll(namespaces []string) (map[string]map[string]
 	return values, nil
 }
 
-func (handle *PortalHandle) Close() error {
+func (handle *PortalHandle) close() error {
 	return handle.conn.Close()
 }

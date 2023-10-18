@@ -144,11 +144,10 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
-		handle, dbusCallback, err := NewDbusServer(initialMode, service.ChangeMode)
+		dbusCallback, err := NewDbusServer(ctx, initialMode, service.ChangeMode)
 		if err != nil {
 			return err
 		}
-		defer handle.Close()
 		service.AddListener(dbusCallback)
 	} else {
 		log.Println("Running without D-Bus server.")
@@ -156,11 +155,10 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 
 	if config.Portal {
 		log.Println("Running with XDG portal.")
-		handle, portalCallback, err := NewPortal(initialMode)
+		portalCallback, err := NewPortal(ctx, initialMode)
 		if err != nil {
 			return err
 		}
-		defer handle.Close()
 		service.AddListener(portalCallback)
 	} else {
 		log.Println("Running without XDG portal.")

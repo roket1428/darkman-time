@@ -1,6 +1,7 @@
 package darkman
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -28,10 +29,8 @@ func (handle *ServerHandle) emitChangeSignal() {
 // mode is changed by another / subsystem.
 func (handle *ServerHandle) changeMode(newMode Mode) {
 	if handle.conn == nil {
-		if err := handle.start(); err != nil {
-			log.Printf("could not start D-Bus server: %v", err)
-			return
-		}
+		log.Printf("Cannot emit signal; no connection to dbus.")
+		return
 	}
 
 	handle.mode = string(newMode)
@@ -54,7 +53,7 @@ func (handle *ServerHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 	return nil
 }
 
-func (handle *ServerHandle) Close() error {
+func (handle *ServerHandle) close() error {
 	return handle.conn.Close()
 }
 
@@ -65,21 +64,21 @@ func (handle *ServerHandle) Close() error {
 //
 // Returns a callback function which should be called each time the current
 // mode changes by some other mechanism.
-func NewDbusServer(initial Mode, onChange func(Mode)) (*ServerHandle, func(Mode), error) {
+func NewDbusServer(ctx context.Context, initial Mode, onChange func(Mode)) (func(Mode), error) {
 	handle := ServerHandle{
 		c:                make(chan Mode),
 		onChangeCallback: onChange,
 		mode:             string(initial),
 	}
 
-	if err := handle.start(); err != nil {
-		return nil, nil, fmt.Errorf("could not start D-Bus server: %v", err)
+	if err := handle.start(ctx); err != nil {
+		return nil, fmt.Errorf("could not start D-Bus server: %v", err)
 	}
 
-	return &handle, handle.changeMode, nil
+	return handle.changeMode, nil
 }
 
-func (handle *ServerHandle) start() (err error) {
+func (handle *ServerHandle) start(ctx context.Context) (err error) {
 	handle.conn, err = dbus.ConnectSessionBus()
 	if err != nil {
 		return fmt.Errorf("could not connect to session D-Bus: %v", err)
@@ -156,5 +155,10 @@ func (handle *ServerHandle) start() (err error) {
 	}
 
 	log.Println("Listening on D-Bus `nl.whynothugo.darkman`...")
+
+	go func() {
+		<-ctx.Done()
+		handle.close()
+	}()
 	return nil
 }
