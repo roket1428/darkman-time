@@ -1,6 +1,7 @@
 package darkman
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -60,23 +61,27 @@ func readLocationFromCache() (location *geoclue.Location) {
 // Initialise geoclue. Note that we have our own channel where we yield
 // locations, and Geoclient has its own. We act as middleman here since we also
 // keep the last location cached.
-func initGeoclue(onLocation func(geoclue.Location)) (client *geoclue.Geoclient, err error) {
-	client, err = geoclue.NewClient("darkman", time.Minute, 40000, 3600*4)
+func initGeoclue(ctx context.Context, onLocation func(context.Context, geoclue.Location)) (client *geoclue.Geoclient, err error) {
+	client, err = geoclue.NewClient(ctx, "darkman", time.Minute, 40000, 3600*4)
 	if err != nil {
 		return nil, err
 	}
 
 	go func() {
+	loop:
 		for {
-			loc := <-client.Locations
+			select {
+			case <-ctx.Done():
+				break loop
+			case loc := <-client.Locations:
+				if err := saveLocationToCache(loc); err != nil {
+					log.Println("Error saving location to cache: ", loc)
+				} else {
+					log.Println("Saved location to cache.")
+				}
 
-			if err := saveLocationToCache(loc); err != nil {
-				log.Println("Error saving location to cache: ", loc)
-			} else {
-				log.Println("Saved location to cache.")
+				onLocation(ctx, loc)
 			}
-
-			onLocation(loc)
 		}
 	}()
 
@@ -87,8 +92,8 @@ func initGeoclue(onLocation func(geoclue.Location)) (client *geoclue.Geoclient, 
 //
 // By default, we indicate set geoclue in a rather passive mode; it'll ignore
 // location changes that occurr in less than four hours, or of less than 40km.
-func GetLocations(onLocation func(geoclue.Location)) (err error) {
-	if _, err = initGeoclue(onLocation); err != nil {
+func GetLocations(ctx context.Context, onLocation func(context.Context, geoclue.Location)) (err error) {
+	if _, err = initGeoclue(ctx, onLocation); err != nil {
 		return fmt.Errorf("error initialising geoclue: %v", err)
 	}
 

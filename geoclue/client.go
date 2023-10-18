@@ -2,6 +2,7 @@
 package geoclue
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -43,7 +44,7 @@ func (client *Geoclient) getUpdatedLocation(path dbus.ObjectPath) (*Location, er
 	return location, nil
 }
 
-func (client *Geoclient) listerForLocation() error {
+func (client *Geoclient) listerForLocation(ctx context.Context) error {
 	if err := client.conn.AddMatchSignal(
 		dbus.WithMatchObjectPath(client.clientPath),
 		dbus.WithMatchInterface("org.freedesktop.GeoClue2.Client"),
@@ -57,31 +58,37 @@ func (client *Geoclient) listerForLocation() error {
 	go func() {
 		c2 := make(chan *dbus.Signal, 3)
 		client.conn.Signal(c2)
+	loop:
 		for {
-			s := <-c2
-			if s.Name != "org.freedesktop.GeoClue2.Client.LocationUpdated" {
-				log.Println("geoclue: Got an unrelated event? ", s)
-				continue
+			select {
+			case <-ctx.Done():
+				client.conn.Close()
+				break loop
+			case s := <-c2:
+				if s.Name != "org.freedesktop.GeoClue2.Client.LocationUpdated" {
+					log.Println("geoclue: Got an unrelated event? ", s)
+					continue
+				}
+
+				client.timeoutTimer.Stop()
+
+				// Geoclue gives us the path to a new object that has
+				// the location data, hence, "newPath".
+				newPath, ok := s.Body[1].(dbus.ObjectPath)
+				if !ok {
+					log.Println("geoclue: failed to parse signal location: ", ok)
+					continue
+				}
+
+				location, err := client.getUpdatedLocation(newPath)
+				if err != nil {
+					log.Println("geoclue: failed to obtain updated location: ", err)
+					continue
+				}
+
+				log.Println("geoclue: resolved a new location: ", location)
+				client.Locations <- *location
 			}
-
-			client.timeoutTimer.Stop()
-
-			// Geoclue gives us the path to a new object that has
-			// the location data, hence, "newPath".
-			newPath, ok := s.Body[1].(dbus.ObjectPath)
-			if !ok {
-				log.Println("geoclue: failed to parse signal location: ", ok)
-				continue
-			}
-
-			location, err := client.getUpdatedLocation(newPath)
-			if err != nil {
-				log.Println("geoclue: failed to obtain updated location: ", err)
-				continue
-			}
-
-			log.Println("geoclue: resolved a new location: ", location)
-			client.Locations <- *location
 		}
 	}()
 
@@ -102,7 +109,7 @@ func (client *Geoclient) listerForLocation() error {
 //
 //   - https://www.freedesktop.org/software/geoclue/docs/gdbus-org.freedesktop.GeoClue2.Client.html#gdbus-property-org-freedesktop-GeoClue2-Client.DistanceThreshold
 //   - https://www.freedesktop.org/software/geoclue/docs/gdbus-org.freedesktop.GeoClue2.Client.html#gdbus-property-org-freedesktop-GeoClue2-Client.TimeThreshold
-func NewClient(desktopId string, timeout time.Duration, distanceThreshold uint32, timeThreshold uint32) (*Geoclient, error) {
+func NewClient(ctx context.Context, desktopId string, timeout time.Duration, distanceThreshold uint32, timeThreshold uint32) (*Geoclient, error) {
 	// TODO: take other params passed to the server here.
 	conn, err := dbus.ConnectSystemBus()
 	if err != nil {
@@ -154,7 +161,7 @@ func NewClient(desktopId string, timeout time.Duration, distanceThreshold uint32
 		log.Println("geoclue: WARNING! the server hasn't responded; is it working? Timeout is:", timeout)
 	}()
 
-	if err = client.listerForLocation(); err != nil {
+	if err = client.listerForLocation(ctx); err != nil {
 		return nil, err
 	}
 

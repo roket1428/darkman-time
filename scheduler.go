@@ -1,6 +1,7 @@
 package darkman
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -68,21 +69,27 @@ type Scheduler struct {
 }
 
 // The scheduler schedules timer to wake up in time for the next sundown/sunrise.
-func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode), useGeoclue bool) error {
+func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, changeCallback func(Mode), useGeoclue bool) error {
 	scheduler := Scheduler{
 		changeCallback: changeCallback,
 	}
 
 	// Alarms wake us up when it's time for the next transition.
 	go func() {
+	loop:
 		for {
-			<-boottimer.Alarms
-			scheduler.Tick()
+			select {
+			case <-boottimer.Alarms:
+				scheduler.Tick(ctx)
+			case <-ctx.Done():
+				// The timer itself also has ctx.
+				break loop
+			}
 		}
 	}()
 
 	if useGeoclue {
-		if err := GetLocations(scheduler.UpdateLocation); err != nil {
+		if err := GetLocations(ctx, scheduler.UpdateLocation); err != nil {
 			log.Println("Could not start location service:", err)
 		} else {
 			return nil
@@ -91,28 +98,28 @@ func NewScheduler(initialLocation *geoclue.Location, changeCallback func(Mode), 
 
 	if initialLocation != nil {
 		log.Println("Not using geoclue; using static location.")
-		scheduler.UpdateLocation(*initialLocation)
+		scheduler.UpdateLocation(ctx, *initialLocation)
 		return nil
 	}
 
 	return fmt.Errorf("no location source available")
 }
 
-func (handler *Scheduler) UpdateLocation(newLocation geoclue.Location) {
+func (handler *Scheduler) UpdateLocation(ctx context.Context, newLocation geoclue.Location) {
 	if handler.currentLocation != nil && newLocation == *handler.currentLocation {
 		log.Println("Location has not changed, nothing to do.")
 		return
 	}
 
 	handler.currentLocation = &newLocation
-	handler.Tick()
+	handler.Tick(ctx)
 }
 
 // A single tick.
 //
 // Update the mode based on the current time, execute transition, and set the
 // timer for the next tick.
-func (handler *Scheduler) Tick() {
+func (handler *Scheduler) Tick(ctx context.Context) {
 	if handler.currentLocation == nil {
 		log.Println("No location yet, nothing to do.")
 		return
@@ -137,7 +144,7 @@ func (handler *Scheduler) Tick() {
 	mode := CalculateCurrentMode(sunrise, sundown)
 	handler.changeCallback(mode)
 
-	setNextAlarm(now, mode, sunrise, sundown)
+	setNextAlarm(ctx, now, mode, sunrise, sundown)
 }
 
 func DetermineModeForRightNow(location geoclue.Location) (Mode, error) {
@@ -150,7 +157,7 @@ func DetermineModeForRightNow(location geoclue.Location) (Mode, error) {
 	return CalculateCurrentMode(sunrise, sundown), nil
 }
 
-func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.Time) {
+func setNextAlarm(ctx context.Context, now time.Time, curMode Mode, sunrise time.Time, sundown time.Time) {
 	log.Println("Next sunrise:", sunrise)
 	log.Println("Next sundown:", sundown)
 
@@ -164,5 +171,5 @@ func setNextAlarm(now time.Time, curMode Mode, sunrise time.Time, sundown time.T
 	}
 
 	sleepFor := nextTick.Sub(now)
-	boottimer.SetTimer(sleepFor)
+	boottimer.SetTimer(ctx, sleepFor)
 }

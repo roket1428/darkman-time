@@ -167,7 +167,7 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	if initialLocation != nil || config.UseGeoclue {
 		// Start after registering all callbacks, so that the first changes
 		// are triggered after they're all listening.
-		if err = NewScheduler(initialLocation, service.ChangeMode, config.UseGeoclue); err != nil {
+		if err = NewScheduler(ctx, initialLocation, service.ChangeMode, config.UseGeoclue); err != nil {
 			return fmt.Errorf("failed to initialise service scheduler: %v", err)
 		}
 	} else {

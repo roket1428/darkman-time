@@ -2,6 +2,7 @@
 package boottimer
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
@@ -30,7 +31,7 @@ var (
 //
 // Because this uses a POSIX alarm under the hood, all alarms are notified via
 // the same channel `Alarms` above.
-func SetTimer(d time.Duration) {
+func SetTimer(ctx context.Context, d time.Duration) {
 	var timer C.timer_t
 	C.timer_create(C.CLOCK_BOOTTIME, nil, &timer)
 
@@ -50,6 +51,10 @@ func SetTimer(d time.Duration) {
 	}
 
 	C.timer_settime(timer, 0, &spec, nil)
+	go func() {
+		<- ctx.Done()
+		C.timer_delete(timer)
+	}()
 }
 
 func init() {
