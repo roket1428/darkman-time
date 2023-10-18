@@ -114,7 +114,7 @@ func GetInitialMode(location *geoclue.Location) Mode {
 }
 
 // Run the darkman service.
-func ExecuteService() error {
+func ExecuteService(readyFd *os.File) error {
 	log.SetFlags(log.Lshortfile)
 
 	config, err := ReadConfig()
@@ -172,6 +172,15 @@ func ExecuteService() error {
 	} else {
 		log.Println("Not using geoclue and no configured location.")
 		log.Println("No automatic transitions will be scheduled.")
+	}
+
+	if readyFd != nil {
+		if _, err = readyFd.Write([]byte("\n")); err != nil {
+			return fmt.Errorf("error writing to ready-fd: %v", err)
+		}
+		if err = readyFd.Close(); err != nil {
+			return fmt.Errorf("error closing ready-fd: %v", err)
+		}
 	}
 
 	// Sleep silently forever...

@@ -189,3 +189,5 @@ immediately.
   had in the past, and can generate shell completions.
 - Shell completions are now included for `bash`, `fish` and `zsh`.
 - Add a `check` command to verify if a configuration file is valid.
+- Add a `--ready-fd` flag to `darkman run`. This prints `\n` to a given file
+  descriptor once the service has reached its ready state.
