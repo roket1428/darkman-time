@@ -211,3 +211,7 @@ func (portal *PortalHandle) ReadAll(namespaces []string) (map[string]map[string]
 
 	return values, nil
 }
+
+func (handle *PortalHandle) Close() error {
+	return handle.conn.Close()
+}

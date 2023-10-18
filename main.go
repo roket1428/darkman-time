@@ -5,6 +5,7 @@
 package darkman
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -114,7 +115,7 @@ func GetInitialMode(location *geoclue.Location) Mode {
 }
 
 // Run the darkman service.
-func ExecuteService(readyFd *os.File) error {
+func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	log.SetFlags(log.Lshortfile)
 
 	config, err := ReadConfig()
@@ -143,10 +144,11 @@ func ExecuteService(readyFd *os.File) error {
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
-		_, dbusCallback, err := NewDbusServer(initialMode, service.ChangeMode)
+		handle, dbusCallback, err := NewDbusServer(initialMode, service.ChangeMode)
 		if err != nil {
 			return err
 		}
+		defer handle.Close()
 		service.AddListener(dbusCallback)
 	} else {
 		log.Println("Running without D-Bus server.")
@@ -154,10 +156,11 @@ func ExecuteService(readyFd *os.File) error {
 
 	if config.Portal {
 		log.Println("Running with XDG portal.")
-		_, portalCallback, err := NewPortal(initialMode)
+		handle, portalCallback, err := NewPortal(initialMode)
 		if err != nil {
 			return err
 		}
+		defer handle.Close()
 		service.AddListener(portalCallback)
 	} else {
 		log.Println("Running without XDG portal.")
@@ -183,6 +186,8 @@ func ExecuteService(readyFd *os.File) error {
 		}
 	}
 
-	// Sleep silently forever...
-	select {}
+	// Run until explicitly stopped.
+	<-ctx.Done()
+
+	return nil
 }

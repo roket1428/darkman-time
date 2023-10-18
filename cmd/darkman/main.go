@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
@@ -72,7 +73,9 @@ The service will run in foreground.`,
 			// Avoid showing usage if service fails to start.
 			// See: https://github.com/spf13/cobra/issues/340#issuecomment-374617413
 			cmd.SilenceUsage = true
-			return darkman.ExecuteService(readyFd)
+
+			ctx := context.Background()
+			return darkman.ExecuteService(ctx, readyFd)
 		},
 	}
 	cmd.Flags().UintVar(&readyFdRaw, "ready-fd", 0, "File descriptor for readiness notification")
