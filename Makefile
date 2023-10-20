@@ -5,6 +5,7 @@ VERSION?=`git describe --tags --dirty 2>/dev/null || echo 0.0.0-dev`
 darkman.1: darkman.1.scd
 	scdoc < darkman.1.scd > darkman.1
 
+.PHONY: darkman
 darkman:
 	go build -ldflags "-X main.Version=$(VERSION)" ./cmd/darkman
 
