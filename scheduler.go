@@ -76,14 +76,13 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 
 	// Alarms wake us up when it's time for the next transition.
 	go func() {
-	loop:
 		for {
 			select {
 			case <-boottimer.Alarms:
 				scheduler.Tick(ctx)
 			case <-ctx.Done():
 				// The timer itself also has ctx.
-				break loop
+				return
 			}
 		}
 	}()

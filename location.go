@@ -68,11 +68,10 @@ func initGeoclue(ctx context.Context, onLocation func(context.Context, geoclue.L
 	}
 
 	go func() {
-	loop:
 		for {
 			select {
 			case <-ctx.Done():
-				break loop
+				return
 			case loc := <-client.Locations:
 				if err := saveLocationToCache(loc); err != nil {
 					log.Println("Error saving location to cache: ", loc)
