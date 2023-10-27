@@ -136,7 +136,7 @@ func ReadConfig() (*Config, error) {
 		return nil, fmt.Errorf("error reading environment variables: %v", err)
 	}
 
-	log.Printf("Loaded configuration: %v\n", config)
+	log.Printf("Loaded configuration: %v\n", &config)
 	return &config, nil
 }
 
@@ -155,4 +155,15 @@ func (config *Config) GetLocation() (*geoclue.Location, error) {
 
 func (config *Config) Hash() (string, error) {
 	return rxhash.HashStruct(config)
+}
+
+func (config *Config) String() string {
+	return fmt.Sprintf(
+		"{lat: %v, lng: %v, usegeoclue: %v, dbusserver: %v, portal: %v}",
+		*config.Lat,
+		*config.Lng,
+		config.UseGeoclue,
+		config.DBusServer,
+		config.Portal,
+	)
 }
