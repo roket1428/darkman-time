@@ -21,7 +21,7 @@ var rootCmd = &cobra.Command{
 
 var setCmd = &cobra.Command{
 	Use:       "set",
-	Short:     "Set the current mode",
+	Short:     "Change the current mode to the one specified",
 	Args:      cobra.MatchAll(cobra.ExactArgs(1), cobra.OnlyValidArgs),
 	ValidArgs: []string{"dark", "light"},
 	RunE: func(cmd *cobra.Command, args []string) error {
