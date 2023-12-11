@@ -183,8 +183,8 @@ immediately.
   extremely unintuitive.
 - Various improvements to example scripts.
 - Various documentation improvements, including docs for `portals.conf`.
-- Droped hardening rules for the systemd service. This doesn't realistically
-  add much security in the end but interferes with several configurations.
+- Dropped hardening rules for the systemd service. This doesn't realistically
+  add much security but interferes with several common configurations.
 - Switch back from `flaggy` to `cobra`. The latter has fixed the issues that we
   had in the past, and can generate shell completions.
 - Shell completions are now included for `bash`, `fish` and `zsh`.
