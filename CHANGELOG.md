@@ -191,3 +191,5 @@ immediately.
 - Add a `check` command to verify if a configuration file is valid.
 - Add a `--ready-fd` flag to `darkman run`. This prints `\n` to a given file
   descriptor once the service has reached its ready state.
+- Add a custom xdg-desktop-portal setting to determine if darkman is being used
+  to retrieve settings.

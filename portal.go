@@ -10,8 +10,14 @@ import (
 	"github.com/godbus/dbus/v5/prop"
 )
 
-const PORTAL_NAMESPACE = "org.freedesktop.appearance"
-const PORTAL_KEY = "color-scheme"
+// Portal setting used for dark mode by most applications.
+const PORTAL_COLOR_SCHEME_NAMESPACE = "org.freedesktop.appearance"
+const PORTAL_COLOR_SCHEME_KEY = "color-scheme"
+
+// Special portal setting used to check if darkman is in used by the portal.
+const PORTAL_DARKMAN_NAMESPACE = "nl.whynothugo.darkman"
+const PORTAL_DARKMAN_STATUS_KEY = "status"
+
 const PORTAL_BUS_NAME = "org.freedesktop.impl.portal.desktop.darkman"
 const PORTAL_OBJ_PATH = "/org/freedesktop/portal/desktop"
 const PORTAL_INTERFACE = "org.freedesktop.impl.portal.Settings"
@@ -46,8 +52,8 @@ func (portal *PortalHandle) changeMode(newMode Mode) {
 	if err := portal.conn.Emit(
 		PORTAL_OBJ_PATH,
 		PORTAL_INTERFACE+".SettingChanged",
-		PORTAL_NAMESPACE,
-		PORTAL_KEY,
+		PORTAL_COLOR_SCHEME_NAMESPACE,
+		PORTAL_COLOR_SCHEME_KEY,
 		dbus.MakeVariant(portal.mode),
 	); err != nil {
 		log.Printf("couldn't emit signal: %v", err)
@@ -194,21 +200,29 @@ func (portal *PortalHandle) start(ctx context.Context) (err error) {
 }
 
 func (portal *PortalHandle) Read(namespace string, key string) (dbus.Variant, *dbus.Error) {
-	if namespace != PORTAL_NAMESPACE || key != PORTAL_KEY {
-		log.Println("Got request for unknown setting:", namespace, key)
-		return dbus.Variant{}, dbus.NewError("org.freedesktop.portal.Error.NotFound", []interface{}{"Requested setting not found"})
+	if namespace == PORTAL_COLOR_SCHEME_NAMESPACE && key == PORTAL_COLOR_SCHEME_KEY {
+		return dbus.MakeVariant(portal.mode), nil
+	}
+	if namespace == PORTAL_DARKMAN_NAMESPACE && key == PORTAL_DARKMAN_STATUS_KEY {
+		return dbus.MakeVariant("running"), nil
 	}
 
-	return dbus.MakeVariant(portal.mode), nil
+	log.Println("Got request for unknown setting:", namespace, key)
+	return dbus.Variant{}, dbus.NewError("org.freedesktop.portal.Error.NotFound", []interface{}{"Requested setting not found"})
 }
 
 func (portal *PortalHandle) ReadAll(namespaces []string) (map[string]map[string]dbus.Variant, *dbus.Error) {
 	values := map[string]map[string]dbus.Variant{}
 
 	for _, namespace := range namespaces {
-		if namespace == PORTAL_NAMESPACE {
-			values[PORTAL_NAMESPACE] = map[string]dbus.Variant{
-				PORTAL_KEY: dbus.MakeVariant(portal.mode),
+		if namespace == PORTAL_COLOR_SCHEME_NAMESPACE {
+			values[PORTAL_COLOR_SCHEME_NAMESPACE] = map[string]dbus.Variant{
+				PORTAL_COLOR_SCHEME_KEY: dbus.MakeVariant(portal.mode),
+			}
+		}
+		if namespace == PORTAL_DARKMAN_NAMESPACE {
+			values[PORTAL_DARKMAN_NAMESPACE] = map[string]dbus.Variant{
+				PORTAL_DARKMAN_STATUS_KEY: dbus.MakeVariant("running"),
 			}
 		}
 	}
