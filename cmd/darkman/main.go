@@ -31,7 +31,7 @@ var setCmd = &cobra.Command{
 
 var getCmd = &cobra.Command{
 	Use:   "get",
-	Short: "Get and print the current mode",
+	Short: "Query and print the current mode",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		mode, err := libdarkman.GetMode()
 		if err == nil {
