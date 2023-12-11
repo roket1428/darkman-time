@@ -31,7 +31,7 @@ func modeToPortalValue(mode Mode) uint {
 		return 2
 	}
 
-	// Should never happen: it's a fatal programming errror.
+	// Should never happen: it's a fatal programming error.
 	log.Println("Got an invalid mode to convert to a D-Bus value!!")
 	return 255
 }
