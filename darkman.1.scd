@@ -154,6 +154,18 @@ hosted at GitLab:
 
 	https://gitlab.com/WhyNotHugo/darkman
 
+# DEBUGGING
+
+To confirm which value is relayed via the *xdg-desktop-portal* use:
+
+```
+gdbus call --session \
+    --dest org.freedesktop.portal.Desktop \
+    --object-path /org/freedesktop/portal/desktop \
+    --method org.freedesktop.portal.Settings.ReadOne \
+    org.freedesktop.appearance color-scheme
+```
+
 # SEE ALSO
 
 portals.conf(5)
