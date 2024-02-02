@@ -44,15 +44,7 @@ techniques.
 Darkman seeks to implement the more widely supported standards, while leaving
 room for users to hook in custom scripts for other applications.
 
-## XDG Settings portal
-
-Darkman implements the FreeDesktop dark mode standard. Applications using this
-API should switch to dark/light mode based on darkman's current preference. This
-standard was originally pushed by the GNOME and Elementary teams, and is
-currently supported by KDE, Firefox and many other projects. You should expect
-applications from those environment to support it, amongst others.
-
-## Shell scripts
+## Custom executables
 
 For additional application support, custom executables (including simple
 shell scripts) can be placed in the following two directories:
@@ -68,6 +60,23 @@ For additional sample scripts (and discussion on how to integrate different
 applications) see the project website:
 
 	https://gitlab.com/WhyNotHugo/darkman
+
+## XDG Settings portal
+
+Darkman implements the FreeDesktop dark mode standard. Applications using this
+API should switch to dark/light mode based on darkman's current preference. This
+standard was originally pushed by the GNOME and Elementary teams, and is
+currently supported by KDE, Firefox and many other projects. You should expect
+applications from those environment to support it, amongst others.
+
+As for *xdg-desktop-portal* version 1.17.0, portals can be configured with
+per-user configuration *portals.conf(5)*. To force the usage of darkman for
+dark/light mode setting, use something like the following:
+
+```
+[preferred]
+org.freedesktop.impl.portal.Settings=darkman
+```
 
 ## D-Bus API
 
@@ -136,17 +145,6 @@ _DARKMAN_LNG_
 
 _DARKMAN_DBUSSERVER_
 	Overrides whether to expose the current mode via D-Bus.
-
-# PORTAL
-
-As for *xdg-desktop-portal* version 1.17.0, portals can be configured with
-per-user configuration *portals.conf(5)*. To force the usage of darkman for
-dark/light mode setting, use something like the following:
-
-```
-[preferred]
-org.freedesktop.impl.portal.Settings=darkman
-```
 
 # PRIVACY
 
