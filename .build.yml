@@ -9,6 +9,7 @@ sources:
 tasks:
   - site: |
       cd darkman
+      scdoc < darkman.1.scd > darkman.1
       mandoc -T html -O style=man-style.css < darkman.1 > site/index.html
   - main-only: |
       cd darkman
