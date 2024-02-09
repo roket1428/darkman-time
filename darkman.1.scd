@@ -91,6 +91,10 @@ For Emacs users, a third party package exists to integrate darkman with Emacs:
 
 	https://github.com/grtcdr/darkman.el
 
+There also exists a plugin for neovim users:
+
+	https://github.com/4e554c4c/darkman.nvim
+
 # LOCATION
 
 darkman will automatically determine the system's location using *geoclue*.
