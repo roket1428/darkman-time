@@ -2,10 +2,12 @@ DESTDIR?=/
 PREFIX=/usr
 VERSION?=`git describe --tags --dirty 2>/dev/null || echo 0.0.0-dev`
 
+.PHONY: build completion install
+build: darkman darkman.1 completion
+
 darkman.1: darkman.1.scd
 	scdoc < darkman.1.scd > darkman.1
 
-.PHONY: darkman
 darkman:
 	go build -ldflags "-X main.Version=$(VERSION)" ./cmd/darkman
 
@@ -18,13 +20,8 @@ darkman.bash: darkman
 darkman.fish: darkman
 	./darkman completion fish > darkman.fish
 
-.PHONY: completion
 completion: _darkman.zsh darkman.bash darkman.fish
 
-.PHONY: build
-build: darkman darkman.1 completion
-
-.PHONY: install
 install: build
 	@install -Dm755 darkman 	${DESTDIR}${PREFIX}/bin/darkman
 	@ln -s darkman                   ${DESTDIR}${PREFIX}/bin/darkmanctl
