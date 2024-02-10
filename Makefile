@@ -22,6 +22,9 @@ darkman.fish: darkman
 
 completion: _darkman.zsh darkman.bash darkman.fish
 
+site/index.html: darkman.1
+	mandoc -T html -O style=man-style.css < darkman.1 > site/index.html
+
 install: build
 	@install -Dm755 darkman 	${DESTDIR}${PREFIX}/bin/darkman
 	@install -Dm644 darkman.service	${DESTDIR}${PREFIX}/lib/systemd/user/darkman.service
