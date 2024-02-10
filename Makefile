@@ -2,7 +2,7 @@ DESTDIR?=/
 PREFIX=/usr
 VERSION?=`git describe --tags --dirty 2>/dev/null || echo 0.0.0-dev`
 
-.PHONY: build completion install
+.PHONY: build install
 build: darkman darkman.1 completion
 
 darkman.1: darkman.1.scd
