@@ -227,6 +227,7 @@ func (portal *PortalHandle) ReadAll(namespaces []string) (map[string]map[string]
 		}
 	}
 
+	log.Println("Got request for unknown namespaces:", namespaces)
 	return values, nil
 }
 
