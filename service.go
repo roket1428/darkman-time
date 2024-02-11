@@ -155,11 +155,12 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 
 	if config.Portal {
 		log.Println("Running with XDG portal.")
-		portalCallback, err := NewPortal(ctx, initialMode)
+		portal, err := NewPortal(initialMode)
+		defer portal.Stop()
 		if err != nil {
 			return err
 		}
-		service.AddListener(portalCallback)
+		service.AddListener(portal.ChangeMode)
 	} else {
 		log.Println("Running without XDG portal.")
 	}
