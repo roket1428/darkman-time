@@ -1,7 +1,6 @@
 package darkman
 
 import (
-	"context"
 	"fmt"
 	"log"
 
@@ -10,7 +9,7 @@ import (
 	"github.com/godbus/dbus/v5/prop"
 )
 
-type ServerHandle struct {
+type DBusHandle struct {
 	conn             *dbus.Conn
 	mode             string
 	prop             *prop.Properties
@@ -18,7 +17,7 @@ type ServerHandle struct {
 	onChangeCallback func(Mode)
 }
 
-func (handle *ServerHandle) emitChangeSignal() {
+func (handle *DBusHandle) emitChangeSignal() {
 	err := handle.conn.Emit("/nl/whynothugo/darkman", "nl.whynothugo.darkman.ModeChanged", handle.mode)
 	if err != nil {
 		log.Printf("couldn't emit signal: %v", err)
@@ -27,7 +26,7 @@ func (handle *ServerHandle) emitChangeSignal() {
 
 // Changes the current mode to `Mode`. This function is to be called when the
 // mode is changed by another / subsystem.
-func (handle *ServerHandle) changeMode(newMode Mode) {
+func (handle *DBusHandle) ChangeMode(newMode Mode) {
 	if handle.conn == nil {
 		log.Printf("Cannot emit signal; no connection to dbus.")
 		return
@@ -39,7 +38,7 @@ func (handle *ServerHandle) changeMode(newMode Mode) {
 }
 
 // Called when the mode is changed by writing to the D-Bus prop.
-func (handle *ServerHandle) handleChangeMode(c *prop.Change) *dbus.Error {
+func (handle *DBusHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 	newMode := Mode(c.Value.(string))
 	if newMode != DARK && newMode != LIGHT {
 		log.Printf("Mode %s is invalid", newMode)
@@ -53,7 +52,7 @@ func (handle *ServerHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 	return nil
 }
 
-func (handle *ServerHandle) close() error {
+func (handle *DBusHandle) Stop() error {
 	return handle.conn.Close()
 }
 
@@ -64,21 +63,21 @@ func (handle *ServerHandle) close() error {
 //
 // Returns a callback function which should be called each time the current
 // mode changes by some other mechanism.
-func NewDbusServer(ctx context.Context, initial Mode, onChange func(Mode)) (func(Mode), error) {
-	handle := ServerHandle{
+func NewDbusServer(initial Mode, onChange func(Mode)) (*DBusHandle, error) {
+	handle := DBusHandle{
 		c:                make(chan Mode),
 		onChangeCallback: onChange,
 		mode:             string(initial),
 	}
 
-	if err := handle.start(ctx); err != nil {
+	if err := handle.start(); err != nil {
 		return nil, fmt.Errorf("could not start D-Bus server: %v", err)
 	}
 
-	return handle.changeMode, nil
+	return &handle, nil
 }
 
-func (handle *ServerHandle) start(ctx context.Context) (err error) {
+func (handle *DBusHandle) start() (err error) {
 	handle.conn, err = dbus.ConnectSessionBus()
 	if err != nil {
 		return fmt.Errorf("could not connect to session D-Bus: %v", err)
@@ -156,9 +155,5 @@ func (handle *ServerHandle) start(ctx context.Context) (err error) {
 
 	log.Println("Listening on D-Bus `nl.whynothugo.darkman`...")
 
-	go func() {
-		<-ctx.Done()
-		handle.close()
-	}()
 	return nil
 }

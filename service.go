@@ -144,11 +144,12 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
-		dbusCallback, err := NewDbusServer(ctx, initialMode, service.ChangeMode)
+		dbus, err := NewDbusServer(initialMode, service.ChangeMode)
+		defer dbus.Stop()
 		if err != nil {
 			return err
 		}
-		service.AddListener(dbusCallback)
+		service.AddListener(dbus.ChangeMode)
 	} else {
 		log.Println("Running without D-Bus server.")
 	}
