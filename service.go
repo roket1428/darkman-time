@@ -42,12 +42,13 @@ func (service *Service) AddListener(listener func(Mode)) {
 
 // Change the current mode (and run all callbacks).
 func (service *Service) ChangeMode(mode Mode) {
-	log.Printf("Mode should now be: %v mode.\n", mode)
+	log.Printf("Wanted mode is: %v mode.\n", mode)
 	if mode == service.currentMode {
 		log.Println("No transition necessary")
 		return
 	}
 
+	log.Println("Notifying all transition handlers of new mode.")
 	service.currentMode = mode
 	for _, listener := range *service.listeners {
 		go listener(mode)
