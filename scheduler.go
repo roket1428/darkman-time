@@ -87,7 +87,12 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 				return
 				// The timer itself also has ctx.
 			case loc := <-newLocations:
-				scheduler.UpdateLocation(ctx, loc)
+				if scheduler.currentLocation != nil && loc == *scheduler.currentLocation {
+					log.Println("Location has not changed, nothing to do.")
+				} else {
+					scheduler.currentLocation = &loc
+					scheduler.Tick(ctx)
+				}
 			}
 		}
 	}()
@@ -101,21 +106,11 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 
 	if initialLocation != nil {
 		log.Println("Not using geoclue; using static location.")
-		scheduler.UpdateLocation(ctx, *initialLocation)
+		newLocations <- *initialLocation
 		return nil
 	}
 
 	return fmt.Errorf("no location source available")
-}
-
-func (handler *Scheduler) UpdateLocation(ctx context.Context, newLocation geoclue.Location) {
-	if handler.currentLocation != nil && newLocation == *handler.currentLocation {
-		log.Println("Location has not changed, nothing to do.")
-		return
-	}
-
-	handler.currentLocation = &newLocation
-	handler.Tick(ctx)
 }
 
 // A single tick.
