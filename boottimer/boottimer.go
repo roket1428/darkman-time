@@ -2,7 +2,6 @@
 package boottimer
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/signal"
@@ -20,6 +19,10 @@ var (
 	Alarms = make(chan struct{})
 )
 
+type Timer struct {
+	timer C.timer_t
+}
+
 // Set a timer for a specific duration.
 //
 // The timer will use CLOCK_BOOTTIME. When the system sleeps and wakes up, this
@@ -31,7 +34,7 @@ var (
 //
 // Because this uses a POSIX alarm under the hood, all alarms are notified via
 // the same channel `Alarms` above.
-func SetTimer(ctx context.Context, d time.Duration) {
+func SetTimer(d time.Duration) Timer {
 	var timer C.timer_t
 	C.timer_create(C.CLOCK_BOOTTIME, nil, &timer)
 
@@ -51,16 +54,19 @@ func SetTimer(ctx context.Context, d time.Duration) {
 	}
 
 	C.timer_settime(timer, 0, &spec, nil)
-	go func() {
-		<- ctx.Done()
-		C.timer_delete(timer)
-	}()
+
+	return Timer{timer}
+}
+
+func (t *Timer) Delete() {
+	C.timer_delete(t.timer)
 }
 
 func init() {
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGALRM)
 
+	// FIXME: magic global override; should be called explicitly.
 	go func() {
 		for {
 			s := <-c

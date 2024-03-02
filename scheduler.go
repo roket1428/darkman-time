@@ -66,6 +66,7 @@ func CalculateCurrentMode(nextSunrise time.Time, nextSundown time.Time) Mode {
 type Scheduler struct {
 	currentLocation *geoclue.Location
 	changeCallback  func(Mode)
+	latestTimer     *boottimer.Timer
 }
 
 // The scheduler schedules timer to wake up in time for the next sundown/sunrise.
@@ -81,8 +82,9 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 			case <-boottimer.Alarms:
 				scheduler.Tick(ctx)
 			case <-ctx.Done():
-				// The timer itself also has ctx.
+				scheduler.stop()
 				return
+				// The timer itself also has ctx.
 			}
 		}
 	}()
@@ -143,7 +145,7 @@ func (handler *Scheduler) Tick(ctx context.Context) {
 	mode := CalculateCurrentMode(sunrise, sundown)
 	handler.changeCallback(mode)
 
-	setNextAlarm(ctx, now, mode, sunrise, sundown)
+	handler.setNextAlarm(ctx, now, mode, sunrise, sundown)
 }
 
 func DetermineModeForRightNow(location geoclue.Location) (Mode, error) {
@@ -156,7 +158,7 @@ func DetermineModeForRightNow(location geoclue.Location) (Mode, error) {
 	return CalculateCurrentMode(sunrise, sundown), nil
 }
 
-func setNextAlarm(ctx context.Context, now time.Time, curMode Mode, sunrise time.Time, sundown time.Time) {
+func (handler *Scheduler) setNextAlarm(ctx context.Context, now time.Time, curMode Mode, sunrise time.Time, sundown time.Time) {
 	log.Println("Next sunrise:", sunrise)
 	log.Println("Next sundown:", sundown)
 
@@ -170,5 +172,14 @@ func setNextAlarm(ctx context.Context, now time.Time, curMode Mode, sunrise time
 	}
 
 	sleepFor := nextTick.Sub(now)
-	boottimer.SetTimer(ctx, sleepFor)
+
+	// Need to move the timer into the heap before assigning.
+	timer := boottimer.SetTimer(sleepFor)
+	handler.latestTimer = &timer
+}
+
+func (handler *Scheduler) stop() {
+	if handler.latestTimer != nil {
+		handler.latestTimer.Delete()
+	}
 }
