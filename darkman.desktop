@@ -1,0 +1,12 @@
+[Desktop Entry]
+Version=1.0
+Name=Toggle darkman
+GenericName=Toggle dark mode
+Comment=Toggle dark mode via darkman
+Keywords=dark;light;colour-preference;theme;
+TryExec=darkman
+Exec=darkman toggle
+#Icon=darkman
+Terminal=false
+Type=Application
+Categories=Settings;
