@@ -16,7 +16,7 @@ var scriptsRunning sync.Mutex
 // Run transition scripts for a given mode.
 //
 // Fires up all scripts asyncrhonously and returns immediately.
-func RunScripts(mode Mode) {
+func RunScripts(mode Mode) error {
 	executables := make(map[string]string)
 	directories := make([]string, len(xdg.DataDirs)+1)
 
@@ -57,4 +57,6 @@ func RunScripts(mode Mode) {
 			}
 		}
 	}()
+
+	return nil
 }

@@ -18,24 +18,24 @@ type DBusHandle struct {
 	onChangeCallback func(Mode)
 }
 
-func (handle *DBusHandle) emitChangeSignal() {
-	err := handle.conn.Emit("/nl/whynothugo/darkman", "nl.whynothugo.darkman.ModeChanged", handle.mode)
-	if err != nil {
-		log.Printf("couldn't emit signal: %v", err)
-	}
+func (handle *DBusHandle) emitChangeSignal() error {
+	return handle.conn.Emit("/nl/whynothugo/darkman", "nl.whynothugo.darkman.ModeChanged", handle.mode)
 }
 
 // Changes the current mode to `Mode`. This function is to be called when the
 // mode is changed by another / subsystem.
-func (handle *DBusHandle) ChangeMode(newMode Mode) {
+func (handle *DBusHandle) ChangeMode(newMode Mode) error {
 	if handle.conn == nil {
-		log.Printf("Cannot emit signal; no connection to dbus.")
-		return
+		return fmt.Errorf("cannot emit dbus signal; no connection to dbus")
 	}
 
 	handle.mode = string(newMode)
 	handle.prop.SetMust("nl.whynothugo.darkman", "Mode", handle.mode)
-	handle.emitChangeSignal()
+	if err := handle.emitChangeSignal(); err != nil {
+		return fmt.Errorf("error emitting mode change dbus signal: %v", err)
+	}
+
+	return nil
 }
 
 // Called when the mode is changed by writing to the D-Bus prop.
@@ -49,7 +49,9 @@ func (handle *DBusHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 	handle.mode = c.Value.(string)
 	handle.onChangeCallback(newMode)
 
-	handle.emitChangeSignal()
+	if err := handle.emitChangeSignal(); err != nil {
+		fmt.Println("Error emitting mode change dbus signal:", err)
+	}
 	return nil
 }
 
@@ -60,7 +62,6 @@ func (handle *DBusHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 //
 // ChangeMode must be called on the returned handle each time that the current
 // mode changes by some other mechanism.
-//
 func NewDbusServer(ctx context.Context, initial Mode, onChange func(Mode)) (*DBusHandle, error) {
 	handle := DBusHandle{
 		c:                make(chan Mode),

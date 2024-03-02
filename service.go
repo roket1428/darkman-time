@@ -17,7 +17,7 @@ import (
 type Mode string
 type Service struct {
 	currentMode Mode
-	listeners   *[]func(Mode)
+	listeners   *[]func(Mode) error
 }
 
 const (
@@ -30,14 +30,17 @@ const (
 func NewService(initialMode Mode) Service {
 	return Service{
 		currentMode: initialMode,
-		listeners:   &[]func(Mode){},
+		listeners:   &[]func(Mode) error{},
 	}
 }
 
 // Add a callback to be run each time the current mode changes.
-func (service *Service) AddListener(listener func(Mode)) {
+func (service *Service) AddListener(listener func(Mode) error) {
 	*service.listeners = append(*service.listeners, listener)
-	listener(service.currentMode) // Apply once with the initial mode.
+	// Apply once with the initial mode.
+	if err := listener(service.currentMode); err != nil {
+		fmt.Println("error applying initial mode:", err)
+	}
 }
 
 // Change the current mode (and run all callbacks).
@@ -51,21 +54,24 @@ func (service *Service) ChangeMode(mode Mode) {
 	log.Println("Notifying all transition handlers of new mode.")
 	service.currentMode = mode
 	for _, listener := range *service.listeners {
-		go listener(mode)
+		go func(listener func(Mode) error, mode Mode) {
+			if err := listener(mode); err != nil {
+				fmt.Println("Error notifying listener:", err)
+			}
+		}(listener, mode)
 	}
 }
 
-func saveModeToCache(mode Mode) {
+func saveModeToCache(mode Mode) error {
 	cacheFilePath, err := xdg.CacheFile("darkman/mode.txt")
 	if err != nil {
-		fmt.Println("Failed find location for mode cache file:", err)
-		return
+		return fmt.Errorf("failed determine location for mode cache file: %v", err)
 	}
 
 	if err = os.WriteFile(cacheFilePath, []byte(mode), os.FileMode(0600)); err != nil {
-		fmt.Println("Failed to save mode to cache:", err)
-		return
+		return fmt.Errorf("failed to save mode to cache: %v", err)
 	}
+	return nil
 }
 
 func readModeFromCache() (Mode, error) {

@@ -42,10 +42,9 @@ func modeToPortalValue(mode Mode) uint {
 	return 255
 }
 
-func (portal *PortalHandle) ChangeMode(newMode Mode) {
+func (portal *PortalHandle) ChangeMode(newMode Mode) error {
 	if portal.conn == nil {
-		log.Printf("Cannot emit signal; no connection to dbus.")
-		return
+		return fmt.Errorf("cannot emit portal signal; no connection to dbus")
 	}
 
 	portal.mode = modeToPortalValue(newMode)
@@ -58,6 +57,8 @@ func (portal *PortalHandle) ChangeMode(newMode Mode) {
 	); err != nil {
 		log.Printf("couldn't emit signal: %v", err)
 	}
+
+	return nil
 }
 
 // Create a new D-Bus server instance for the XDG portal API.
