@@ -146,7 +146,11 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	if config.DBusServer {
 		log.Println("Running with D-Bus server.")
 		dbus, err := NewDbusServer(initialMode, service.ChangeMode)
-		defer dbus.Stop()
+		defer func() {
+			if err := dbus.Stop(); err != nil {
+				log.Panicln("Error stopping D-Bus daemon:", err)
+			}
+		}()
 		if err != nil {
 			return err
 		}
@@ -158,7 +162,11 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	if config.Portal {
 		log.Println("Running with XDG portal.")
 		portal, err := NewPortal(initialMode)
-		defer portal.Stop()
+		defer func() {
+			if err := portal.Stop(); err != nil {
+				log.Panicln("Error stopping D-Bus daemon:", err)
+			}
+		}()
 		if err != nil {
 			return err
 		}
