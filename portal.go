@@ -1,6 +1,7 @@
 package darkman
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -61,20 +62,21 @@ func (portal *PortalHandle) ChangeMode(newMode Mode) {
 
 // Create a new D-Bus server instance for the XDG portal API.
 //
-// Returns a callback function which should be called each time the current
-// mode changes.
-func NewPortal(initial Mode) (*PortalHandle, error) {
+// ChangeMode must be called on the returned handle each time that the current
+// mode changes by some other mechanism.
+func NewPortal(ctx context.Context, initial Mode) (*PortalHandle, error) {
 	portal := PortalHandle{mode: modeToPortalValue(initial)}
 
-	if err := portal.start(); err != nil {
+	if err := portal.start(ctx); err != nil {
 		return nil, fmt.Errorf("could not start D-Bus server: %v", err)
 	}
 
 	return &portal, nil
 }
 
-func (portal *PortalHandle) start() (err error) {
-	portal.conn, err = dbus.ConnectSessionBus()
+func (portal *PortalHandle) start(ctx context.Context) (err error) {
+	opts := dbus.WithContext(ctx)
+	portal.conn, err = dbus.ConnectSessionBus(opts)
 	if err != nil {
 		return fmt.Errorf("could not connect to session D-Bus: %v", err)
 	}
@@ -224,8 +226,4 @@ func (portal *PortalHandle) ReadAll(namespaces []string) (map[string]map[string]
 
 	log.Println("Got request for unknown namespaces:", namespaces)
 	return values, nil
-}
-
-func (handle *PortalHandle) Stop() error {
-	return handle.conn.Close()
 }

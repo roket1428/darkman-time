@@ -1,6 +1,7 @@
 package darkman
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -52,33 +53,31 @@ func (handle *DBusHandle) handleChangeMode(c *prop.Change) *dbus.Error {
 	return nil
 }
 
-func (handle *DBusHandle) Stop() error {
-	return handle.conn.Close()
-}
-
-// Create a new D-Bus server instance for our API.
+// Create a new D-Bus server instance for darkman's bespoke API.
 //
 // Takes as parameter a function that will be called each time the current
 // mode is changed via this D-Bus API.
 //
-// Returns a callback function which should be called each time the current
+// ChangeMode must be called on the returned handle each time that the current
 // mode changes by some other mechanism.
-func NewDbusServer(initial Mode, onChange func(Mode)) (*DBusHandle, error) {
+//
+func NewDbusServer(ctx context.Context, initial Mode, onChange func(Mode)) (*DBusHandle, error) {
 	handle := DBusHandle{
 		c:                make(chan Mode),
 		onChangeCallback: onChange,
 		mode:             string(initial),
 	}
 
-	if err := handle.start(); err != nil {
+	if err := handle.start(ctx); err != nil {
 		return nil, fmt.Errorf("could not start D-Bus server: %v", err)
 	}
 
 	return &handle, nil
 }
 
-func (handle *DBusHandle) start() (err error) {
-	handle.conn, err = dbus.ConnectSessionBus()
+func (handle *DBusHandle) start(ctx context.Context) (err error) {
+	opts := dbus.WithContext(ctx)
+	handle.conn, err = dbus.ConnectSessionBus(opts)
 	if err != nil {
 		return fmt.Errorf("could not connect to session D-Bus: %v", err)
 	}
