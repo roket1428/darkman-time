@@ -195,3 +195,5 @@ immediately.
   descriptor once the service has reached its ready state.
 - Add a custom xdg-desktop-portal setting to determine if darkman is being used
   to retrieve settings.
+- Darkman will exit with an error if configured to use geoclue and connecting
+  to geoclue falis.

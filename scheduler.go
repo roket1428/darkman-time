@@ -75,6 +75,7 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 		changeCallback: changeCallback,
 	}
 
+	newLocations := make(chan (geoclue.Location))
 	// Alarms wake us up when it's time for the next transition.
 	go func() {
 		for {
@@ -85,16 +86,17 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 				scheduler.stop()
 				return
 				// The timer itself also has ctx.
+			case loc := <-newLocations:
+				scheduler.UpdateLocation(ctx, loc)
 			}
 		}
 	}()
 
 	if useGeoclue {
-		if err := GetLocations(ctx, scheduler.UpdateLocation); err != nil {
-			log.Println("Could not start location service:", err)
-		} else {
-			return nil
+		if err := GetLocations(ctx, newLocations); err != nil {
+			return fmt.Errorf("could not start location service: %v", err)
 		}
+		return nil
 	}
 
 	if initialLocation != nil {

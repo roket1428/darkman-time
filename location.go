@@ -61,7 +61,7 @@ func readLocationFromCache() (location *geoclue.Location) {
 // Initialise geoclue. Note that we have our own channel where we yield
 // locations, and Geoclient has its own. We act as middleman here since we also
 // keep the last location cached.
-func initGeoclue(ctx context.Context, onLocation func(context.Context, geoclue.Location)) (client *geoclue.Geoclient, err error) {
+func initGeoclue(ctx context.Context, onLocation chan (geoclue.Location)) (client *geoclue.Geoclient, err error) {
 	client, err = geoclue.NewClient(ctx, "darkman", time.Minute, 40000, 3600*4)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func initGeoclue(ctx context.Context, onLocation func(context.Context, geoclue.L
 					log.Println("Saved location to cache.")
 				}
 
-				onLocation(ctx, loc)
+				onLocation <- loc
 			}
 		}
 	}()
@@ -90,12 +90,11 @@ func initGeoclue(ctx context.Context, onLocation func(context.Context, geoclue.L
 // Periodically fetch the current location.
 //
 // By default, we indicate set geoclue in a rather passive mode; it'll ignore
-// location changes that occurr in less than four hours, or of less than 40km.
-func GetLocations(ctx context.Context, onLocation func(context.Context, geoclue.Location)) (err error) {
+// location changes that occur in less than four hours, or of less than 40km.
+func GetLocations(ctx context.Context, onLocation chan (geoclue.Location)) (err error) {
 	if _, err = initGeoclue(ctx, onLocation); err != nil {
 		return fmt.Errorf("error initialising geoclue: %v", err)
 	}
-
 	return nil
 
 }
