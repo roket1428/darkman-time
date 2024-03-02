@@ -24,7 +24,6 @@ completion: _darkman.zsh darkman.bash darkman.fish
 
 install: build
 	@install -Dm755 darkman 	${DESTDIR}${PREFIX}/bin/darkman
-	@ln -s darkman                   ${DESTDIR}${PREFIX}/bin/darkmanctl
 	@install -Dm644 darkman.service	${DESTDIR}${PREFIX}/lib/systemd/user/darkman.service
 	@install -Dm644 darkman.1	${DESTDIR}${PREFIX}/share/man/man1/darkman.1
 	@install -Dm644 LICENCE 	${DESTDIR}${PREFIX}/share/licenses/darkman/LICENCE

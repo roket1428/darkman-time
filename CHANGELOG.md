@@ -178,6 +178,8 @@ immediately.
 - **BREAKING** Geoclue integration is now disabled by default. To retain the
   previous behaviour, explicitly enable it in the configuration file.
 - **BREAKING** Go version 1.18 is not required to build.
+- **BREAKING** The deprecated `darkmanctl` alias is gone. Use `darkman`
+  instead.
 - Don't print usage output if an error occurs. Only show it if the provided
   arguments are invalid. This was a bug, and make reading error output
   extremely unintuitive.
