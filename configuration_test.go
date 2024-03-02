@@ -7,8 +7,8 @@ import (
 
 func TestLoadFromYaml(t *testing.T) {
 	dir := t.TempDir()
-	testfile := dir + "/test1.yaml"
-	if err := os.WriteFile(testfile, []byte("usegeoclue: true\n"), 0666); err != nil {
+	testPath := dir + "/test1.yaml"
+	if err := os.WriteFile(testPath, []byte("usegeoclue: true\n"), 0666); err != nil {
 		t.Fatal("failed to write test file:", err)
 	}
 
@@ -22,7 +22,12 @@ func TestLoadFromYaml(t *testing.T) {
 		DBusServer: true,
 		Portal:     true,
 	}
-	if err := config.LoadFromYamlFile(testfile); err != nil {
+
+	testfile, err := os.Open(testPath)
+	if err != nil {
+		t.Fatal("failed to open just-created configuration file:", err)
+	}
+	if err := config.LoadFromYaml(testfile); err != nil {
 		t.Fatal("failed to read configuration file:", err)
 	}
 
