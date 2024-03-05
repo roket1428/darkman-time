@@ -86,8 +86,8 @@ var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check the configuration file",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		_, err := darkman.ReadConfig()
-		if err != nil {
+		config := darkman.Default()
+		if err := darkman.ReadConfig(&config); err != nil {
 			return err
 		}
 		fmt.Println("The configuration file is valid")

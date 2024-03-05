@@ -125,8 +125,8 @@ func GetInitialMode(location *geoclue.Location) Mode {
 func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	log.SetFlags(log.Lshortfile)
 
-	config, err := ReadConfig()
-	if err != nil {
+	config := Default()
+	if err := ReadConfig(&config); err != nil {
 		log.Println("Could not read configuration file:", err)
 	}
 
@@ -134,7 +134,7 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	if initialLocation != nil {
 		log.Println("Read location from cache:", initialLocation)
 	} else {
-		initialLocation, err = config.GetLocation()
+		initialLocation, err := config.GetLocation()
 		if err != nil {
 			log.Println("No location found via config.")
 		} else {
@@ -174,7 +174,7 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	if initialLocation != nil || config.UseGeoclue {
 		// Start after registering all callbacks, so that the first changes
 		// are triggered after they're all listening.
-		err = NewScheduler(ctx, initialLocation, service.ChangeMode, config.UseGeoclue)
+		err := NewScheduler(ctx, initialLocation, service.ChangeMode, config.UseGeoclue)
 		if err != nil {
 			return fmt.Errorf("failed to initialise service scheduler: %v", err)
 		}
@@ -184,10 +184,10 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	}
 
 	if readyFd != nil {
-		if _, err = readyFd.Write([]byte("\n")); err != nil {
+		if _, err := readyFd.Write([]byte("\n")); err != nil {
 			return fmt.Errorf("error writing to ready-fd: %v", err)
 		}
-		if err = readyFd.Close(); err != nil {
+		if err := readyFd.Close(); err != nil {
 			return fmt.Errorf("error closing ready-fd: %v", err)
 		}
 	}

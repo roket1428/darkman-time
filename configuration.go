@@ -22,7 +22,7 @@ type Config struct {
 }
 
 // Returns a new Config with the default values.
-func New() Config {
+func Default() Config {
 	return Config{
 		Lat:        nil,
 		Lng:        nil,
@@ -114,12 +114,10 @@ func (config *Config) LoadFromYamlFile(filePath string) error {
 	return nil
 }
 
-func ReadConfig() (*Config, error) {
-	config := New()
-
+func ReadConfig(config *Config) error {
 	configDir, err := xdg.ConfigFile("darkman")
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	configFile := filepath.Join(configDir, "config.yaml")
@@ -133,11 +131,11 @@ func ReadConfig() (*Config, error) {
 	}
 
 	if err := config.LoadFromEnv(); err != nil {
-		return nil, fmt.Errorf("error reading environment variables: %v", err)
+		return fmt.Errorf("error reading environment variables: %v", err)
 	}
 
 	log.Printf("Loaded configuration: %v\n", &config)
-	return &config, nil
+	return nil
 }
 
 func (config *Config) GetLocation() (*geoclue.Location, error) {
