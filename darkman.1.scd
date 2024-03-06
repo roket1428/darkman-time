@@ -17,8 +17,8 @@ darkman - daemon for dark-mode and light-mode transitions on Unix-like desktops
 again at sunrise. darkman is not designed to be used interactively: it's designed to
 be set up once, and run in the background.
 
-It is, however, possible to trigger manual transitions and even disable
-automatic transitions entirely.
+It is also possible to trigger manual transitions and it is also possible to
+disable automatic transitions entirely.
 
 # COMMANDS
 
@@ -37,39 +37,55 @@ automatic transitions entirely.
 
 # INTEGRATIONS
 
-The open source desktop ecosystem is quite heterogeneous and switching between
-dark/light mode on different applications requires different mechanism and
-techniques.
+The open source desktop ecosystem is quite heterogeneous and making different
+applications switch between dark/light different mechanism and techniques.
 
-Darkman seeks to implement the more widely supported standards, while leaving
-room for users to hook in custom scripts for other applications.
+Darkman seeks to implement the more widely adopted standards, while leaving room
+for users to hook in custom scripts for other applications.
 
 ## Custom executables
 
-For additional application support, custom executables (including simple
-shell scripts) can be placed in the following two directories:
+For any sort of custom integration, executables (including simple shell scripts)
+can be placed in the following two directories:
 
-- _$XDG_DATA_DIRS/dark-mode.d/_: Scripts to run when switching to dark mode.
-- _$XDG_DATA_DIRS/light-mode.d/_: Scripts to run when switching to light mode.
+- _$XDG_DATA_DIRS/dark-mode.d/_: Executed when switching to dark mode.
+- _$XDG_DATA_DIRS/light-mode.d/_: Executed when switching to light mode.
 
-; This is the recommended approach for simpler tools like mako(1), zathura(1), etc.
+These scripts or executables can perform any actions required, like telling
+re-writing configuration files for a PDF reader, or controlling a notification
+daemon to switch to another theme.
 
 Scripts need to have an executable bit set, or will not be executed.
 
-For additional sample scripts (and discussion on how to integrate different
-applications) see the project website:
+`$XDG_DATA_DIRS` is defined in the xdg basedir specification, and usually
+matches the following, amongst others:
+
+- ~/.local/share/
+- /usr/local/share/
+- /usr/share/
+
+Example scripts (and discussion on how to integrate different applications) are
+available in the project repository:
 
 	https://gitlab.com/WhyNotHugo/darkman
 
+Packages may also drop-in their own scripts into any of these locations,
+although application developers are encouraged to use the D-Bus API to
+determine the current mode and listen for changes (see below for details).
+
 ## XDG Settings portal
 
-Darkman implements the FreeDesktop dark mode standard. Applications using this
-API should switch to dark/light mode based on darkman's current preference. This
-standard was originally pushed by the GNOME and Elementary teams, and is
-currently supported by KDE, Firefox and many other projects. You should expect
-applications from those environment to support it, amongst others.
+Darkman implements the XDG desktop portal's dark mode standard. Applications
+using this API should switch to dark/light mode based on darkman's current
+preference. This standard was originally pushed by the GNOME and Elementary
+teams, and is currently supported by KDE, Firefox and many other projects. You
+should expect applications from those environment to support it, amongst others.
 
-As for *xdg-desktop-portal* version 1.17.0, portals can be configured with
+For more details on this protocol, see:
+
+	https://flatpak.github.io/xdg-desktop-portal/docs/doc-org.freedesktop.portal.Settings.html
+
+As for *xdg-desktop-portal* version 1.17.0, portals MUST be configured with
 per-user configuration *portals.conf(5)*. To force the usage of darkman for
 dark/light mode setting, use something like the following:
 
@@ -97,17 +113,21 @@ There also exists a plugin for neovim users:
 
 # LOCATION
 
-darkman will automatically determine the system's location using *geoclue*.
-Geoclue's reliability varies depending on distribution and desktop environment,
-and it will often not work without a geoclue agent running.
+The current location may be specified in the configuration file. The location is
+used to calculate what time sundown and sunrise happen.
 
-If using geoclue is not an option, the location may be specified explicitly via
-a configuration file.
+It is also possible for darkman to automatically determine the system's location
+using *geoclue*. Geoclue's reliability varies depending on distribution and
+desktop environment, as an agent often needs to be configured for it to work
+properly.
+
+If no location is known, automatic transitions are disabled.
 
 # CONFIGURATION
 
 A configuration file and all settings are optional. Configuration is read from
-*~/.config/darkman/config.yaml*, and has the following format:
+*~/.config/darkman/config.yaml* (or other paths defined in the XDG basedir
+spec), and has the following format:
 
 ```
 lat: 52.3
@@ -154,8 +174,8 @@ _DARKMAN_DBUSSERVER_
 
 Darkman will trigger a darkmode/lightmode transition at sundown in the current
 location. When a web browser applies this transition at the same time, open
-websites can use this information to extrapolate some information about the
-current location.
+websites MAY record and use this information to extrapolate the current
+location.
 
 # DEVELOPMENT
 

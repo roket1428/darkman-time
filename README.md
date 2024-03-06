@@ -17,15 +17,10 @@ These scripts individually configure different components and applications.
 Sample and reference scripts are included in the `examples` directory, and
 further contributions for specific applications or environments are welcome.
 
-Hint: `$XDG_DATA_DIRS` usually matches these, amongst others:
+The complete documentation is included as a man page and is also [available
+online][docs].
 
-    ~/.local/share/
-    /usr/local/share/
-    /usr/share/
-
-Packages may also drop-in their own scripts into any of these locations,
-although application developers are encouraged to use the D-Bus API to
-determine the current mode and listen for changes (see below for details).
+[docs]: https://darkman.whynothugo.nl/
 
 ## Installation
 
@@ -43,14 +38,13 @@ determine the current mode and listen for changes (see below for details).
 
 ### Others
 
-You'll need `scdoc` and `go` installed to build from source. There are
-typically both available in distribution repositories (e.g.: `apt-get
-install...`).
+`scdoc` and `go` are required to build from source. They are both typically
+available in distribution repositories (e.g.: `apt-get install...`).
 
     git clone git@gitlab.com:WhyNotHugo/darkman.git
     cd darkman
     make
-    sudo make install
+    sudo make install PREFIX=/usr
 
 ## Setup
 
