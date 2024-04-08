@@ -38,11 +38,15 @@ func RunScripts(mode Mode) error {
 			filePath := fmt.Sprintf("%v/%v", modeDir, file.Name())
 			log.Printf("Found %v.", filePath)
 			ok, err := IsExecutable(filePath)
+			// Don't try to execute scripts that aren't executable
 			if err != nil {
 				log.Printf("%v: %s", filePath, err)
 			}
+
 			if ok {
 				executables[file.Name()] = filePath
+			} else {
+				delete(executables, file.Name())
 			}
 		}
 	}
@@ -68,8 +72,6 @@ func RunScripts(mode Mode) error {
 }
 
 // Check if a file is executable
-//
-// Don't try to execute scripts that aren't executable
 func IsExecutable(file string) (bool, error) {
 	m, err := os.Stat(file)
 	if err != nil {
