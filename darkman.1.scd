@@ -173,9 +173,21 @@ _DARKMAN_DBUSSERVER_
 # PRIVACY
 
 Darkman will trigger a darkmode/lightmode transition at sundown in the current
-location. When a web browser applies this transition at the same time, open
-websites MAY record and use this information to extrapolate the current
-location.
+location. Any application that is running locally can record or transmit the
+time of these transitions and attempt to extrapolate information related the
+current location.
+
+When a web browser applies this transition at the same time, open websites can
+record this information too.
+
+A potential stalker or tracker can use the above information to infer that you
+are likely in a region of the world where sunset happened at a specific time.
+This region is usually a wide area spanning tens of thousands of kilometers, but
+can be smaller for certain geographical locations.
+
+The author of this tool uses a manually configured location with an integer
+latitude and longitude to achieve a sensible balance between privacy and
+convenience.
 
 # DEVELOPMENT
 
