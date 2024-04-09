@@ -170,6 +170,10 @@ _DARKMAN_LNG_
 _DARKMAN_DBUSSERVER_
 	Overrides whether to expose the current mode via D-Bus.
 
+_XDG_CURRENT_DESKTOP_
+	Darkman does not use this variable; it should be defined for the
+	*xdg-desktop-portal* instead.
+
 # PRIVACY
 
 Darkman will trigger a darkmode/lightmode transition at sundown in the current
