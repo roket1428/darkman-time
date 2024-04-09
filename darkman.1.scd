@@ -94,6 +94,19 @@ dark/light mode setting, use something like the following:
 org.freedesktop.impl.portal.Settings=darkman
 ```
 
+When using a desktop-specific configuration (e.g.: *swaywm-portals.conf*),
+please keep in mind that the environment variable *XDG_CURRENT_DESKTOP* must be
+set for the *xdg-desktop-portal*.
+
+The *xdg-desktop-portal* should start after *darkman* has started and is ready.
+Use *--ready-fd* for readiness notification. This is likely not relevant on
+systemd-based setups, where the service manager intermediates in taking the
+named bus.
+
+For a more in-depth explanation, see this article:
+
+	https://whynothugo.nl/journal/2024/04/09/darkman-portal-configuration/
+
 ## D-Bus API
 
 For custom integrations, darkman exposes a D-Bus API which allows querying and
