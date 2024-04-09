@@ -57,8 +57,8 @@ daemon to switch to another theme.
 
 Scripts need to have an executable bit set, or will not be executed.
 
-`$XDG_DATA_DIRS` is defined in the xdg basedir specification, and usually
-matches the following, amongst others:
+The variable `$XDG_DATA_DIRS` is defined in the xdg basedir specification, and
+usually matches the following, amongst others:
 
 - ~/.local/share/
 - /usr/local/share/
