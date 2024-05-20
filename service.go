@@ -121,6 +121,22 @@ func GetInitialMode(location *geoclue.Location) Mode {
 	}
 }
 
+func GetInitialModeTime(configTime *Time) Mode {
+	if configTime != nil {
+		if mode, err := DetermineModeForRightNowTime(*configTime); err != nil {
+			log.Println("Could not determine mode for location:", err)
+			return NULL
+		} else {
+			return mode
+		}
+	} else if mode, err := readModeFromCache(); err != nil {
+		log.Println("Could not load previous mode from cache:", err)
+		return NULL
+	} else {
+		return mode
+	}
+}
+
 // Run the darkman service.
 func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	log.SetFlags(log.Lshortfile)
@@ -134,7 +150,7 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 	if initialLocation != nil {
 		log.Println("Read location from cache:", initialLocation)
 	} else {
-		initialLocation, err := config.GetLocation()
+		initialLocation, _, err := config.GetLocation()
 		if err != nil {
 			log.Println("No location found via config.")
 		} else {
@@ -142,7 +158,19 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 		}
 	}
 
-	initialMode := GetInitialMode(initialLocation)
+	_, initialTime, err := config.GetLocation()
+	if err != nil {
+		log.Println("No location found via config.")
+	} else {
+		log.Println("Found time in config:", initialTime)
+	}
+
+	var initialMode Mode
+	if initialLocation != nil {
+		initialMode = GetInitialMode(initialLocation)
+	} else {
+		initialMode = GetInitialModeTime(initialTime)
+	}
 	log.Println("Initial mode set to:", initialMode)
 
 	service := NewService(initialMode)
@@ -171,10 +199,13 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 		log.Println("Running without XDG portal.")
 	}
 
-	if initialLocation != nil || config.UseGeoclue {
+	log.Printf("initialLocation: %v", initialLocation)
+	log.Printf("initialTime: %v", initialTime)
+	log.Printf("geoclue: %v", config.UseGeoclue)
+	if initialLocation != nil || initialTime != nil || config.UseGeoclue {
 		// Start after registering all callbacks, so that the first changes
 		// are triggered after they're all listening.
-		if err := NewScheduler(ctx, initialLocation, service.ChangeMode, config.UseGeoclue); err != nil {
+		if err := NewScheduler(ctx, initialLocation, initialTime, service.ChangeMode, config.UseGeoclue); err != nil {
 			return fmt.Errorf("failed to initialise service scheduler: %v", err)
 		}
 	} else {

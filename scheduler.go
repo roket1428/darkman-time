@@ -51,6 +51,23 @@ func NextSunriseAndSundown(loc geoclue.Location, now time.Time) (sunrise time.Ti
 	return
 }
 
+func NextSunriseAndSundownTime(configTime Time, now time.Time) (sunrise time.Time, sundown time.Time, err error) {
+	sunrise = configTime.Sunrise
+	sundown = configTime.Sunset
+	// If sunrise has passed today, the next one is tomorrow:
+	if sunrise.Before(now) {
+		var sundownTomorrow time.Time
+		sunrise = sunrise.Add(time.Hour * 24)
+		sundownTomorrow = sundown.Add(time.Hour * 24)
+		// It might also be past sundown today:
+		if sundown.Before(now) {
+			sundown = sundownTomorrow
+		}
+	}
+
+	return
+}
+
 func CalculateCurrentMode(nextSunrise time.Time, nextSundown time.Time) Mode {
 	if nextSunrise.Before(nextSundown) {
 		log.Println("Sunrise comes first; so it's night time.")
@@ -65,17 +82,19 @@ func CalculateCurrentMode(nextSunrise time.Time, nextSundown time.Time) Mode {
 // trigering changes based on the current location and sun position.
 type Scheduler struct {
 	currentLocation *geoclue.Location
+	currentTime     *Time
 	changeCallback  func(Mode)
 	latestTimer     *boottimer.Timer
 }
 
 // The scheduler schedules timer to wake up in time for the next sundown/sunrise.
-func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, changeCallback func(Mode), useGeoclue bool) error {
+func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, initialTime *Time, changeCallback func(Mode), useGeoclue bool) error {
 	scheduler := Scheduler{
 		changeCallback: changeCallback,
 	}
 
 	newLocations := make(chan (geoclue.Location))
+	chanTime := make(chan (Time))
 	// Alarms wake us up when it's time for the next transition.
 	go func() {
 		for {
@@ -93,6 +112,9 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 					scheduler.currentLocation = &loc
 					scheduler.Tick(ctx)
 				}
+			case tm := <-chanTime:
+				scheduler.currentTime = &tm
+				scheduler.Tick(ctx)
 			}
 		}
 	}()
@@ -110,6 +132,12 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 		return nil
 	}
 
+	if initialTime != nil {
+		log.Println("Not using geoclue or static location; using custom sunrise and sunset.")
+		chanTime <- *initialTime
+		return nil
+	}
+
 	return fmt.Errorf("no location source available")
 }
 
@@ -118,8 +146,8 @@ func NewScheduler(ctx context.Context, initialLocation *geoclue.Location, change
 // Update the mode based on the current time, execute transition, and set the
 // timer for the next tick.
 func (handler *Scheduler) Tick(ctx context.Context) {
-	if handler.currentLocation == nil {
-		log.Println("No location yet, nothing to do.")
+	if handler.currentLocation == nil && handler.currentTime == nil {
+		log.Println("No location or time yet, nothing to do.")
 		return
 	}
 
@@ -133,10 +161,20 @@ func (handler *Scheduler) Tick(ctx context.Context) {
 	//
 	// TODO: with recent changes, this might no longer be necessary, but
 	// needs to be well tested.
-	sunrise, sundown, err := NextSunriseAndSundown(*handler.currentLocation, now.Add(time.Minute))
-	if err != nil {
-		log.Printf("Error calculating next sundown/sunrise: %v", err)
-		return
+	var err error
+	var sunrise, sundown time.Time
+	if handler.currentTime != nil {
+		sunrise, sundown, err = NextSunriseAndSundownTime(*handler.currentTime, now.Add(time.Minute))
+		if err != nil {
+			log.Printf("Error calculating next sundown/sunrise: %v", err)
+			return
+		}
+	} else {
+		sunrise, sundown, err = NextSunriseAndSundown(*handler.currentLocation, now.Add(time.Minute))
+		if err != nil {
+			log.Printf("Error calculating next sundown/sunrise: %v", err)
+			return
+		}
 	}
 
 	mode := CalculateCurrentMode(sunrise, sundown)
@@ -148,6 +186,16 @@ func (handler *Scheduler) Tick(ctx context.Context) {
 func DetermineModeForRightNow(location geoclue.Location) (Mode, error) {
 	now := time.Now()
 	sunrise, sundown, err := NextSunriseAndSundown(location, now.Add(time.Minute))
+	if err != nil {
+		return NULL, fmt.Errorf("error calculating next sundown/sunrise: %v", err)
+	}
+
+	return CalculateCurrentMode(sunrise, sundown), nil
+}
+
+func DetermineModeForRightNowTime(configTime Time) (Mode, error) {
+	now := time.Now()
+	sunrise, sundown, err := NextSunriseAndSundownTime(configTime, now.Add(time.Minute))
 	if err != nil {
 		return NULL, fmt.Errorf("error calculating next sundown/sunrise: %v", err)
 	}

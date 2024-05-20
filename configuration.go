@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/rxwycdh/rxhash"
 	"gitlab.com/WhyNotHugo/darkman/geoclue"
@@ -16,9 +17,16 @@ import (
 type Config struct {
 	Lat        *float64
 	Lng        *float64
+	Sunrise    *string
+	Sunset     *string
 	UseGeoclue bool
 	DBusServer bool
 	Portal     bool
+}
+
+type Time struct {
+	Sunrise time.Time
+	Sunset  time.Time
 }
 
 // Returns a new Config with the default values.
@@ -26,6 +34,8 @@ func Default() Config {
 	return Config{
 		Lat:        nil,
 		Lng:        nil,
+		Sunrise:    nil,
+		Sunset:     nil,
 		UseGeoclue: false,
 		DBusServer: true,
 		Portal:     true,
@@ -42,6 +52,15 @@ func readFloatEnvVar(name string) (*float64, error) {
 		}
 	}
 	return nil, nil
+}
+
+func readStringEnvVar(name string) *string {
+	if raw, ok := os.LookupEnv(name); ok {
+		if raw != "" {
+			return &raw
+		}
+	}
+	return nil
 }
 
 // Returns nil if the environment variable is unset.
@@ -70,6 +89,14 @@ func (config *Config) LoadFromEnv() error {
 		return err
 	} else if lng != nil {
 		config.Lng = lng
+	}
+
+	if sunrise := readStringEnvVar("DARKMAN_SUNRISE"); sunrise != nil {
+		config.Sunrise = sunrise
+	}
+
+	if sunset := readStringEnvVar("DARKMAN_SUNSET"); sunset != nil {
+		config.Sunset = sunset
 	}
 
 	if usegeoclue, err := readBoolEnvVar("DARKMAN_USEGEOCLUE"); err != nil {
@@ -167,17 +194,46 @@ func ReadConfig(config *Config) error {
 	return nil
 }
 
-func (config *Config) GetLocation() (*geoclue.Location, error) {
-	if config.Lat == nil || config.Lng == nil {
-		return nil, fmt.Errorf("no valid location in the config")
+func (config *Config) GetLocation() (*geoclue.Location, *Time, error) {
+	if ((config.Lat == nil && config.Lng != nil) ||
+		(config.Lat != nil && config.Lng == nil)) &&
+		((config.Sunrise == nil && config.Sunset != nil) ||
+			(config.Sunrise != nil && config.Sunset == nil)) {
+		return nil, nil, fmt.Errorf("no valid location / time in the config")
 	}
 
-	location := geoclue.Location{
-		Lat: *config.Lat,
-		Lng: *config.Lng,
+	if config.Sunrise != nil {
+		now := time.Now()
+		sunriseHour, err := strconv.Atoi(strings.Split(*config.Sunrise, ":")[0])
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing time sunrise: %v", err)
+		}
+		sunriseMinute, err := strconv.Atoi(strings.Split(*config.Sunrise, ":")[1])
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing time sunrise: %v", err)
+		}
+		sunrise := time.Date(now.Year(), now.Month(), now.Day(), int(sunriseHour), int(sunriseMinute), 0, 0, now.Location())
+		sunsetHour, err := strconv.ParseInt(strings.TrimLeft(strings.Split(*config.Sunset, ":")[0], "0"), 10, 0)
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing time sunset: %v", err)
+		}
+		sunsetMinute, err := strconv.ParseInt(strings.Split(*config.Sunset, ":")[1], 10, 0)
+		sunset := time.Date(now.Year(), now.Month(), now.Day(), int(sunsetHour), int(sunsetMinute), 0, 0, now.Location())
+		if err != nil {
+			return nil, nil, fmt.Errorf("error parsing time sunset: %v", err)
+		}
+		location := Time{
+			Sunrise: sunrise,
+			Sunset:  sunset,
+		}
+		return nil, &location, nil
+	} else {
+		location := geoclue.Location{
+			Lat: *config.Lat,
+			Lng: *config.Lng,
+		}
+		return &location, nil, nil
 	}
-
-	return &location, nil
 }
 
 func (config *Config) Hash() (string, error) {
