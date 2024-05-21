@@ -165,16 +165,12 @@ func (handler *Scheduler) Tick(ctx context.Context) {
 	var sunrise, sundown time.Time
 	if handler.currentTime != nil {
 		sunrise, sundown, err = NextSunriseAndSundownTime(*handler.currentTime, now.Add(time.Minute))
-		if err != nil {
-			log.Printf("Error calculating next sundown/sunrise: %v", err)
-			return
-		}
 	} else {
 		sunrise, sundown, err = NextSunriseAndSundown(*handler.currentLocation, now.Add(time.Minute))
-		if err != nil {
-			log.Printf("Error calculating next sundown/sunrise: %v", err)
-			return
-		}
+	}
+	if err != nil {
+		log.Printf("Error calculating next sundown/sunrise: %v", err)
+		return
 	}
 
 	mode := CalculateCurrentMode(sunrise, sundown)

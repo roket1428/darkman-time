@@ -199,9 +199,6 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 		log.Println("Running without XDG portal.")
 	}
 
-	log.Printf("initialLocation: %v", initialLocation)
-	log.Printf("initialTime: %v", initialTime)
-	log.Printf("geoclue: %v", config.UseGeoclue)
 	if initialLocation != nil || initialTime != nil || config.UseGeoclue {
 		// Start after registering all callbacks, so that the first changes
 		// are triggered after they're all listening.
@@ -209,7 +206,7 @@ func ExecuteService(ctx context.Context, readyFd *os.File) error {
 			return fmt.Errorf("failed to initialise service scheduler: %v", err)
 		}
 	} else {
-		log.Println("Not using geoclue and no configured location.")
+		log.Println("Not using geoclue, no configured location and no configured time.")
 		log.Println("No automatic transitions will be scheduled.")
 	}
 
