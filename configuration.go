@@ -212,13 +212,13 @@ func (config *Config) GetLocation() (*geoclue.Location, *Time, error) {
 		if err != nil {
 			return nil, nil, fmt.Errorf("error parsing time sunrise: %v", err)
 		}
-		sunrise := time.Date(now.Year(), now.Month(), now.Day(), int(sunriseHour), int(sunriseMinute), 0, 0, now.Location())
-		sunsetHour, err := strconv.ParseInt(strings.TrimLeft(strings.Split(*config.Sunset, ":")[0], "0"), 10, 0)
+		sunrise := time.Date(now.Year(), now.Month(), now.Day(), sunriseHour, sunriseMinute, 0, 0, now.Location())
+		sunsetHour, err := strconv.Atoi(strings.Split(*config.Sunset, ":")[0])
 		if err != nil {
 			return nil, nil, fmt.Errorf("error parsing time sunset: %v", err)
 		}
-		sunsetMinute, err := strconv.ParseInt(strings.Split(*config.Sunset, ":")[1], 10, 0)
-		sunset := time.Date(now.Year(), now.Month(), now.Day(), int(sunsetHour), int(sunsetMinute), 0, 0, now.Location())
+		sunsetMinute, err := strconv.Atoi(strings.Split(*config.Sunset, ":")[1])
+		sunset := time.Date(now.Year(), now.Month(), now.Day(), sunsetHour, sunsetMinute, 0, 0, now.Location())
 		if err != nil {
 			return nil, nil, fmt.Errorf("error parsing time sunset: %v", err)
 		}
